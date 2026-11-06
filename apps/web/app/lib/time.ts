@@ -121,14 +121,35 @@ export const MONTHS_GENITIVE = [
   "листопада",
   "грудня",
 ];
+// The usual Ukrainian short month names: date tiles and calendar leaves.
+export const MONTHS_SHORT = [
+  "січ.",
+  "лют.",
+  "бер.",
+  "квіт.",
+  "трав.",
+  "черв.",
+  "лип.",
+  "серп.",
+  "вер.",
+  "жовт.",
+  "лист.",
+  "груд.",
+];
 
 export function dayOfMonth(dateKey: string): number {
   return Number(dateKey.slice(8, 10));
 }
 
+/** January = 0 … December = 11, read from the "YYYY-MM-DD" key itself. */
+export function monthIndex(dateKey: string): number {
+  const [, m] = dateKey.split("-").map(Number);
+  return m - 1;
+}
+
 /** "25 жовтня" */
 export function dateLong(dateKey: string): string {
-  return `${dayOfMonth(dateKey)} ${MONTHS_GENITIVE[Number(dateKey.slice(5, 7)) - 1]}`;
+  return `${dayOfMonth(dateKey)} ${MONTHS_GENITIVE[monthIndex(dateKey)]}`;
 }
 
 /** "Сьогодні", "Завтра" or "Вт, 27 жовтня". */

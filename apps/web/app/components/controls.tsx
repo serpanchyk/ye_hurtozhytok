@@ -2,10 +2,12 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { Icon } from "~/components/ui";
 import {
+  MONTHS_SHORT,
   WEEKDAYS_SHORT,
   addDays,
   dateLong,
   dayOfMonth,
+  monthIndex,
   weekdayIndex,
 } from "~/lib/time";
 
@@ -110,22 +112,6 @@ export function ChoiceChips({
   );
 }
 
-// The usual Ukrainian short month names, for the label over a month's first day.
-const MONTHS_SHORT = [
-  "січ.",
-  "лют.",
-  "бер.",
-  "квіт.",
-  "трав.",
-  "черв.",
-  "лип.",
-  "серп.",
-  "вер.",
-  "жовт.",
-  "лист.",
-  "груд.",
-];
-
 /** Days from today, as tiles like the booking page; «Без дати» first. */
 export function DateField({
   name,
@@ -175,7 +161,7 @@ export function DateField({
           </span>
         </label>
         {list.map((d) => {
-          const month = MONTHS_SHORT[Number(d.slice(5, 7)) - 1];
+          const month = MONTHS_SHORT[monthIndex(d)];
           return (
             <label className="day-tile" key={d} aria-label={dateLong(d)}>
               <input

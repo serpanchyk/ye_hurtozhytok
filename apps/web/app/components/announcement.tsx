@@ -2,7 +2,13 @@ import { Link } from "react-router";
 
 import { Icon } from "~/components/ui";
 import { fmtTime, whenLabel } from "~/lib/announcements";
-import { WEEKDAYS_SHORT, dayOfMonth, weekdayIndex } from "~/lib/time";
+import {
+  MONTHS_SHORT,
+  WEEKDAYS_SHORT,
+  dayOfMonth,
+  monthIndex,
+  weekdayIndex,
+} from "~/lib/time";
 
 /** A stored picture; served by the Worker after a permission check. */
 export function mediaUrl(key: string) {
@@ -23,12 +29,13 @@ type Item = {
   imageCount: number;
 };
 
-/** Weekday and day number, like a tear-off calendar leaf. */
+/** Weekday, day number and month, like a tear-off calendar leaf. */
 export function CalendarLeaf({ date }: { date: string }) {
   return (
     <span className="cal-leaf" aria-hidden="true">
       <small>{WEEKDAYS_SHORT[weekdayIndex(date)]}</small>
       <b>{dayOfMonth(date)}</b>
+      <i>{MONTHS_SHORT[monthIndex(date)]}</i>
     </span>
   );
 }

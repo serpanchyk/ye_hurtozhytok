@@ -8,6 +8,8 @@ import {
   kyivDateKey,
   kyivMinute,
   kyivMinuteToUtc,
+  MONTHS_SHORT,
+  monthIndex,
 } from "./time";
 
 describe("Kyiv time", () => {
@@ -53,6 +55,12 @@ describe("dates", () => {
   it("adds days across months", () => {
     expect(addDays("2026-10-30", 3)).toBe("2026-11-02");
     expect(daysBetween("2026-10-25", "2026-11-01")).toBe(7);
+  });
+
+  it("reads the month from the date key, zero-based", () => {
+    expect(monthIndex("2027-01-01")).toBe(0);
+    expect(monthIndex("2026-12-31")).toBe(11);
+    expect(MONTHS_SHORT[monthIndex("2026-12-03")]).toBe("груд.");
   });
 
   it("names days relative to today", () => {
