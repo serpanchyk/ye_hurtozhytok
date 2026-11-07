@@ -1642,11 +1642,21 @@ a.day:hover {
 }
 .cal-leaf b {
   display: block;
-  padding: 3px 0 5px;
+  padding: 3px 0 0;
   font-size: 21px;
+  line-height: 1;
   font-weight: 700;
   letter-spacing: -0.03em;
   font-feature-settings: "tnum";
+}
+.cal-leaf i {
+  display: block;
+  padding: 0 0 4px;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--ink-2);
 }
 .attention {
   margin-bottom: 12px;
