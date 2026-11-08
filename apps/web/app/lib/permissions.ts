@@ -1,4 +1,4 @@
-import type { Role } from "./db/schema";
+import type { Board, Role } from "./db/schema";
 
 export type Actor = { id: number; roles: readonly Role[]; blocked?: boolean };
 
@@ -115,4 +115,37 @@ export function canEditAnnouncement(actor: Actor, a: AnnouncementRef): boolean {
   if (a.deletedAt !== null) return false;
   if (canPublishAnnouncements(actor)) return true;
   return !actor.blocked && a.authorId === actor.id && a.status === "pending";
+}
+
+type TaskRef = {
+  board: Board;
+  public: boolean;
+  createdBy: number;
+  deletedAt: number | null;
+};
+
+/**
+ * Keeps a board: adds, edits, takes, moves cards and sees private ones.
+ * The council keeps its board, the squad its own; the site manager both.
+ */
+export function canManageBoard(actor: WithRoles, board: Board): boolean {
+  return board === "council" ? isCouncil(actor) : isSquad(actor);
+}
+
+/** Public cards are for everyone; private ones only for those who keep the board. */
+export function canSeeTask(actor: Actor, task: TaskRef): boolean {
+  if (task.deletedAt !== null) return false;
+  return task.public || canManageBoard(actor, task.board);
+}
+
+/** The card's author, the board's head and the site manager remove cards. */
+export function canDeleteTask(actor: Actor, task: TaskRef): boolean {
+  if (task.deletedAt !== null || !canManageBoard(actor, task.board))
+    return false;
+  const head = task.board === "council" ? "council_head" : "squad_head";
+  return (
+    task.createdBy === actor.id ||
+    actor.roles.includes(head) ||
+    isSiteManager(actor)
+  );
 }

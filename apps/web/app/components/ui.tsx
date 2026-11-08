@@ -29,6 +29,8 @@ export type IconName =
   | "image"
   | "pencil"
   | "share"
+  | "board"
+  | "lock"
   | "x";
 
 /** One SVG sprite per page; icons reference it with <use>. */
@@ -113,6 +115,14 @@ export function IconSprite() {
       <symbol id="i-logout" viewBox="0 0 24 24">
         <path d="M14 4h3.5A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5H14" />
         <path d="M10 8l-4 4 4 4M6 12h9" />
+      </symbol>
+      <symbol id="i-board" viewBox="0 0 24 24">
+        <rect x="3.5" y="4" width="17" height="16" rx="3.5" />
+        <path d="M9.2 4v16M14.8 4v16M5.8 8h1.6M11.2 8h1.6M11.2 11.5h1.6M16.6 8h1.6" />
+      </symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24">
+        <rect x="5" y="10.5" width="14" height="10" rx="2.5" />
+        <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" />
       </symbol>
       <symbol id="i-shield" viewBox="0 0 24 24">
         <path d="M12 3.5 5 6v5.5c0 4.2 3 7.6 7 9 4-1.4 7-4.8 7-9V6z" />
@@ -408,14 +418,14 @@ export function Ticket({
   );
 }
 
-export type Tab = "home" | "laundry" | "me" | null;
+export type Tab = "home" | "laundry" | "board" | "me" | null;
 
-/** Sections of the app; each section owns its own actions. */
 /** Sections of the app; each section owns its own actions. */
 export function TabBar({ active }: { active: Tab }) {
   const tabs = [
     { id: "home", to: "/", icon: "home", label: "Головна" },
     { id: "laundry", to: "/laundry", icon: "washer", label: "Пральня" },
+    { id: "board", to: "/board", icon: "board", label: "Дошка" },
     { id: "me", to: "/me", icon: "user", label: "Моє" },
   ] as const;
   const index = tabs.findIndex((t) => t.id === active);

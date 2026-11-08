@@ -23,14 +23,21 @@ export type ActivityAction =
   | "announcement.published"
   | "announcement.rejected"
   | "announcement.updated"
-  | "announcement.deleted";
+  | "announcement.deleted"
+  | "task.created"
+  | "task.updated"
+  | "task.status"
+  | "task.taken"
+  | "task.left"
+  | "task.moved"
+  | "task.deleted";
 
 export function activity(
   db: Db,
   entry: {
     actorId: number;
     action: ActivityAction;
-    entity: "booking" | "resident" | "role_grant" | "announcement";
+    entity: "booking" | "resident" | "role_grant" | "announcement" | "task";
     entityId: number;
     details?: Record<string, unknown>;
   },

@@ -8,6 +8,9 @@ import {
   canSeeAnnouncement,
   canBook,
   canCancel,
+  canDeleteTask,
+  canManageBoard,
+  canSeeTask,
   canManageRoles,
   canRelease,
   canRevokeRole,
@@ -150,6 +153,48 @@ describe("permissions", () => {
       expect(canEditAnnouncement(resident, published)).toBe(false);
       expect(canEditAnnouncement(other, pending)).toBe(false);
       expect(canEditAnnouncement(council, published)).toBe(true);
+    });
+  });
+
+  describe("task boards", () => {
+    const squadHead = { id: 8, roles: ["squad_head" as const], room: "405" };
+    const councilCard = {
+      board: "council" as const,
+      public: true,
+      createdBy: council.id,
+      deletedAt: null,
+    };
+    const squadCard = {
+      board: "squad" as const,
+      public: false,
+      createdBy: squad.id,
+      deletedAt: null,
+    };
+
+    it("lets each side keep only its own board; the site manager both", () => {
+      expect(canManageBoard(council, "council")).toBe(true);
+      expect(canManageBoard(council, "squad")).toBe(false);
+      expect(canManageBoard(squad, "squad")).toBe(true);
+      expect(canManageBoard(squad, "council")).toBe(false);
+      expect(canManageBoard(manager, "council")).toBe(true);
+      expect(canManageBoard(manager, "squad")).toBe(true);
+      expect(canManageBoard(resident, "council")).toBe(false);
+      expect(canManageBoard({ ...squad, blocked: true }, "squad")).toBe(false);
+    });
+    it("shows private cards only to those who keep the board", () => {
+      expect(canSeeTask(resident, councilCard)).toBe(true);
+      expect(canSeeTask(resident, squadCard)).toBe(false);
+      expect(canSeeTask(council, squadCard)).toBe(false);
+      expect(canSeeTask(squad, squadCard)).toBe(true);
+      expect(canSeeTask(squad, { ...squadCard, deletedAt: 1 })).toBe(false);
+    });
+    it("lets the author, the board's head and the site manager delete", () => {
+      expect(canDeleteTask(squad, squadCard)).toBe(true);
+      expect(canDeleteTask(squadHead, squadCard)).toBe(true);
+      expect(canDeleteTask(manager, squadCard)).toBe(true);
+      expect(canDeleteTask({ ...squad, id: 99 }, squadCard)).toBe(false);
+      expect(canDeleteTask(head, squadCard)).toBe(false);
+      expect(canDeleteTask(head, councilCard)).toBe(true);
     });
   });
 });

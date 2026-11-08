@@ -1,6 +1,7 @@
 import {
   index,
   integer,
+  primaryKey,
   sqliteTable,
   text,
   uniqueIndex,
@@ -28,6 +29,11 @@ export const ANNOUNCEMENT_STATUSES = [
 export type AnnouncementStatus = (typeof ANNOUNCEMENT_STATUSES)[number];
 // "squad" is for the squad section that arrives with Оперета.
 export const AUDIENCES = ["all", "squad"] as const;
+// The council and the squad each keep their own task board.
+export const BOARDS = ["council", "squad"] as const;
+export type Board = (typeof BOARDS)[number];
+export const TASK_STATUSES = ["new", "in_progress", "done"] as const;
+export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 // All *_at columns hold UTC milliseconds.
 
@@ -189,6 +195,47 @@ export const announcementImages = sqliteTable(
   ],
 );
 
+export const tasks = sqliteTable(
+  "tasks",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    board: text("board", { enum: BOARDS }).notNull(),
+    title: text("title").notNull(),
+    details: text("details"),
+    place: text("place"),
+    status: text("status", { enum: TASK_STATUSES }).notNull().default("new"),
+    // Public cards are seen by every resident (title, place, status, dates);
+    // private ones only by those who keep the board.
+    public: integer("public", { mode: "boolean" }).notNull().default(false),
+    createdBy: integer("created_by")
+      .notNull()
+      .references(() => residents.id),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+    doneAt: integer("done_at"),
+    deletedAt: integer("deleted_at"),
+  },
+  (t) => [index("tasks_board_status_idx").on(t.board, t.status, t.deletedAt)],
+);
+
+// Who works on a task; a task may have several people or nobody.
+export const taskAssignees = sqliteTable(
+  "task_assignees",
+  {
+    taskId: integer("task_id")
+      .notNull()
+      .references(() => tasks.id),
+    residentId: integer("resident_id")
+      .notNull()
+      .references(() => residents.id),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.taskId, t.residentId] }),
+    index("task_assignees_resident_idx").on(t.residentId),
+  ],
+);
+
 // One row per device still to be notified; the minute cron sends them in
 // small batches so a broadcast never exceeds the Worker's subrequest limit.
 export const pushOutbox = sqliteTable(
@@ -231,3 +278,4 @@ export type Announcement = typeof announcements.$inferSelect;
 export type AnnouncementImage = typeof announcementImages.$inferSelect;
 export type Machine = typeof machines.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
+export type Task = typeof tasks.$inferSelect;
