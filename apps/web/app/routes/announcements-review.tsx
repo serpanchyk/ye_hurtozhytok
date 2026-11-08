@@ -7,7 +7,7 @@ import { canPublishAnnouncements } from "~/lib/permissions";
 import { kyivDateKey, kyivNow } from "~/lib/time";
 import type { Route } from "./+types/announcements-review";
 
-export const handle = { tab: "home" };
+export const handle = { tab: "work" };
 export const meta: Route.MetaFunction = () => [
   { title: "Пропозиції оголошень · єГуртожиток" },
 ];
@@ -33,7 +33,7 @@ export default function Review({ loaderData }: Route.ComponentProps) {
   const { list } = loaderData;
   return (
     <>
-      <TopBar back="/" title="Пропозиції оголошень" />
+      <TopBar back="/work" title="Пропозиції оголошень" />
       <p className="lede" style={{ margin: "0 4px 14px" }}>
         Від мешканців. Відкрийте пропозицію, щоб опублікувати її або відхилити з
         поясненням для автора.

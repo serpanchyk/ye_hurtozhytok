@@ -30,6 +30,7 @@ export default [
     route("machines/:slug", "routes/machine.tsx"),
     route("bookings", "routes/bookings.tsx"),
     route("bookings/:id", "routes/booking.tsx"),
+    route("work", "routes/work.tsx"),
     route("me", "routes/me.tsx"),
     route("profile", "routes/profile.tsx"),
     route("council", "routes/council.tsx"),

@@ -24,7 +24,7 @@ import { setBlocked } from "~/lib/residents.server";
 import { listPeople, setRoles } from "~/lib/roles.server";
 import type { Route } from "./+types/residents";
 
-export const handle = { tab: "me" };
+export const handle = { tab: "work" };
 export const meta: Route.MetaFunction = () => [
   { title: "Мешканці · єГуртожиток" },
 ];
@@ -234,7 +234,7 @@ export default function Residents({
 
   return (
     <>
-      <TopBar back="/me" title="Мешканці" />
+      <TopBar back="/work" title="Мешканці" />
       <p className="lede" style={{ margin: "0 4px 14px" }}>
         {loaderData.manage
           ? "Кожен, хто увійшов через пошту Політехніки, — мешканець; роль лише додає права. Відкрийте людину, щоб змінити ролі чи заблокувати."
