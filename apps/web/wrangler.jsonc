@@ -14,6 +14,8 @@
     // Public half of the Web Push key pair; the private half is a secret.
     "VAPID_PUBLIC_KEY": "BINn6_eWph5C_iIMcWD06U5O5b-P_92HXa7I5LlBYFfgSfl2yXQaAmKpUO7GDxzWWtikvNnMa_npyubrhRR1kyE",
     "VAPID_SUBJECT": "https://ehurtozhytok.pages.dev",
+    // Development sign-in; only "1" in .dev.vars turns it on, and only on localhost.
+    "DEV_LOGIN": "",
   },
   // Set with `npx wrangler secret put <NAME>`; locally they come from .dev.vars.
   // Listed here so `wrangler types` knows them without .dev.vars (CI).
