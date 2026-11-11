@@ -3815,7 +3815,8 @@ html:not(.booted) .ticket::after,
   .topic-group:not([data-to="council"]),
 .form:has([name="to"][value="squad"]:checked)
   .topic-group:not([data-to="squad"]),
-.form:has([name="to"][value="app"]:checked) .topic-group:not([data-to="app"]) {
+.form:has([name="to"][value="app"]:checked) .topic-group:not([data-to="app"]),
+.form:has([name="to"][value="app"]:checked) .place-field {
   display: none;
 }
 

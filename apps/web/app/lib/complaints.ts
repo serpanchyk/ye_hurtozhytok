@@ -147,7 +147,9 @@ export function parseComplaintForm(
     errors.place = `Місце до ${PLACE_MAX} символів.`;
   if (!isTopic(topic) || Object.keys(errors).length)
     return { ok: false, errors };
-  return { ok: true, values: { topic, body, place: place || null } };
+  // The app has no place; a value left in the hidden field is dropped.
+  const where = boardFor(topic) ? place || null : null;
+  return { ok: true, values: { topic, body, place: where } };
 }
 
 /** What the author is told; required to turn a complaint down. */

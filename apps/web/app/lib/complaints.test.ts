@@ -56,6 +56,16 @@ describe("complaints", () => {
     expect(parseComplaintForm(form({ topic: "noise", body: "ой" })).ok).toBe(
       false,
     );
+    // The app has no place, even if one was typed before switching.
+    const app = parseComplaintForm(
+      form({
+        to: "app",
+        topic: "app_bug",
+        place: "5 поверх",
+        body: "Не входить",
+      }),
+    );
+    expect(app.ok && app.values.place).toBeNull();
     // A topic left checked under another recipient does not slip through.
     expect(
       parseComplaintForm(

@@ -105,14 +105,17 @@ export default function NewComplaint({ actionData }: Route.ComponentProps) {
         ))}
         {errors?.topic && <small className="field-error">{errors.topic}</small>}
 
-        <FormField id="place" label="Де" optional error={errors?.place}>
-          <input
-            id="place"
-            name="place"
-            maxLength={PLACE_MAX}
-            placeholder="5 поверх, кухня"
-          />
-        </FormField>
+        {/* A place means nothing for the app, so it hides there. */}
+        <div className="place-field">
+          <FormField id="place" label="Де" optional error={errors?.place}>
+            <input
+              id="place"
+              name="place"
+              maxLength={PLACE_MAX}
+              placeholder="5 поверх, кухня"
+            />
+          </FormField>
+        </div>
         <FormField id="body" label="Опишіть" error={errors?.body}>
           <textarea
             id="body"
