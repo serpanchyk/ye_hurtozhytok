@@ -11,6 +11,7 @@ import {
 import { useNavDirection } from "~/lib/nav-direction";
 import { inWork } from "~/lib/sections";
 import { useSteadyScroll } from "~/lib/use-steady-scroll";
+import { useSwipeNav } from "~/lib/use-swipe-nav";
 import { skipForPhotoViewer } from "~/lib/revalidate";
 import type { Route } from "./+types/app-layout";
 
@@ -28,6 +29,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export default function AppLayout({ loaderData }: Route.ComponentProps) {
   useNavDirection();
+  useSwipeNav();
   const pageRef = useRef<HTMLElement>(null);
   useSteadyScroll(pageRef);
   const matches = useMatches();
