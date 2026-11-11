@@ -112,7 +112,7 @@ export default function Work({ loaderData }: Route.ComponentProps) {
               to="/work/schedule"
               icon="shield"
               title="Графік вахт"
-              sub="Хто на вахті цього тижня, вільні вахти"
+              sub="Вахти й обходи цього тижня"
             />
             <LinkRow
               to="/work/board?b=squad"

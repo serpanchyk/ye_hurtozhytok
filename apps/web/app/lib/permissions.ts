@@ -208,3 +208,11 @@ export function canLeaveShift(
     (shift.residentId === actor.id || leadsSquad(actor))
   );
 }
+
+/** Those who lead change any patrol; others the ones they recorded. */
+export function canEditPatrol(
+  actor: Actor,
+  patrol: { createdBy: number },
+): boolean {
+  return canEditShift(actor, patrol);
+}

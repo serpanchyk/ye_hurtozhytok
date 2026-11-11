@@ -154,6 +154,7 @@ export function DateField({
   defaultValue,
   error,
   allowNone = true,
+  back = 0,
 }: {
   name: string;
   legend: ReactNode;
@@ -163,8 +164,12 @@ export function DateField({
   error?: string;
   /** Offer «Без дати»; off where a date is required. */
   allowNone?: boolean;
+  /** Days before today to offer too, for things that already happened. */
+  back?: number;
 }) {
-  const list = Array.from({ length: days }, (_, i) => addDays(today, i));
+  const list = Array.from({ length: days + back }, (_, i) =>
+    addDays(today, i - back),
+  );
   // An existing date outside the window (already past, or far ahead) stays choosable.
   if (defaultValue && !list.includes(defaultValue)) list.unshift(defaultValue);
   const [value, setValue] = useState(defaultValue ?? "");

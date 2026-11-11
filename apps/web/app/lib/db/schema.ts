@@ -34,6 +34,8 @@ export const BOARDS = ["council", "squad"] as const;
 export type Board = (typeof BOARDS)[number];
 export const TASK_STATUSES = ["new", "in_progress", "done"] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
+export const PATROL_STATUSES = ["planned", "done"] as const;
+export type PatrolStatus = (typeof PATROL_STATUSES)[number];
 // What a complaint is about; the topic decides who gets it (lib/complaints.ts).
 export const COMPLAINT_TOPICS = [
   "electricity",
@@ -225,6 +227,8 @@ export const tasks = sqliteTable(
     // Public cards are seen by every resident (title, place, status, dates);
     // private ones only by those who keep the board.
     public: integer("public", { mode: "boolean" }).notNull().default(false),
+    // A card made from a patrol's notes; the patrol may be deleted later.
+    patrolId: integer("patrol_id"),
     createdBy: integer("created_by")
       .notNull()
       .references(() => residents.id),
@@ -299,6 +303,36 @@ export const shifts = sqliteTable(
   (t) => [uniqueIndex("shifts_date_idx").on(t.date)],
 );
 
+// A squad patrol round: done, or planned ahead; any day of the week.
+export const patrols = sqliteTable(
+  "patrols",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    // Kyiv calendar date "YYYY-MM-DD"; patrols have no time of day.
+    date: text("date").notNull(),
+    status: text("status", { enum: PATROL_STATUSES }).notNull(),
+    notes: text("notes"),
+    createdBy: integer("created_by")
+      .notNull()
+      .references(() => residents.id),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [index("patrols_date_idx").on(t.date)],
+);
+
+export const patrolMembers = sqliteTable(
+  "patrol_members",
+  {
+    patrolId: integer("patrol_id")
+      .notNull()
+      .references(() => patrols.id),
+    residentId: integer("resident_id")
+      .notNull()
+      .references(() => residents.id),
+  },
+  (t) => [primaryKey({ columns: [t.patrolId, t.residentId] })],
+);
+
 // One row per device still to be notified; the minute cron sends them in
 // small batches so a broadcast never exceeds the Worker's subrequest limit.
 export const pushOutbox = sqliteTable(
@@ -344,3 +378,4 @@ export type Booking = typeof bookings.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
 export type Complaint = typeof complaints.$inferSelect;
 export type Shift = typeof shifts.$inferSelect;
+export type Patrol = typeof patrols.$inferSelect;

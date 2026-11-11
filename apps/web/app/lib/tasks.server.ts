@@ -142,6 +142,7 @@ export async function getTask(env: Env, actor: Actor, id: number) {
       doneAt: t.doneAt,
       author: author?.name ?? "",
       assignees: assignees.map((p) => p.name),
+      patrolId: t.patrolId,
     },
     mine: assignees.some((p) => p.id === actor.id),
     // A card from a complaint is turned down, never deleted.

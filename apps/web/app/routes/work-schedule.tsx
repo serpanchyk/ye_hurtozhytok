@@ -3,6 +3,7 @@ import { Form, Link, data, redirect, useNavigation } from "react-router";
 import { Credit, Icon, TopBar } from "~/components/ui";
 import { requireProfile } from "~/lib/auth.server";
 import { isSquad } from "~/lib/permissions";
+import { weekPatrols } from "~/lib/patrols.server";
 import { leaveShift, signShift, weekOfShifts } from "~/lib/shifts.server";
 import {
   addDays,
@@ -26,14 +27,21 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const today = kyivNow().date;
   const w = new URL(request.url).searchParams.get("w");
   const monday = startOfWeek(isDateKey(w) ? w : today);
-  const days = await weekOfShifts(env, me, monday, today);
+  const [days, patrols] = await Promise.all([
+    weekOfShifts(env, me, monday, today),
+    weekPatrols(env, me, monday),
+  ]);
   return {
     monday,
     prev: addDays(monday, -7),
     next: addDays(monday, 7),
     thisWeek: monday === startOfWeek(today),
     range: `${dateLong(monday)} — ${dateLong(addDays(monday, 6))}`,
-    days: days.map((d) => ({ ...d, label: dayName(d.date, today) })),
+    days: days.map((d) => ({
+      ...d,
+      label: dayName(d.date, today),
+      patrols: patrols.filter((p) => p.date === d.date),
+    })),
   };
 }
 
@@ -102,77 +110,102 @@ export default function Schedule({
           <div className="section-h">
             <h3>{d.label}</h3>
           </div>
-          {!d.duty ? (
-            <p className="muted" style={{ margin: "0 4px" }}>
+          {!d.duty && (
+            <p className="muted" style={{ margin: "0 4px 8px" }}>
               Вахт немає
             </p>
-          ) : (
+          )}
+          {(d.duty || d.patrols.length > 0) && (
             <div className="glass" style={{ padding: "4px 0" }}>
-              <div className="list-row">
-                <span
-                  className="who-av"
-                  style={
-                    d.shift?.mine
-                      ? { background: "var(--mine)", color: "#fff" }
-                      : undefined
-                  }
-                >
-                  <Icon name="shield" small />
-                </span>
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <b>
-                    {d.shift
-                      ? (d.shift.name ?? "Вільна вахта")
-                      : d.past
-                        ? "Вахти не було"
-                        : "Вахти ще немає"}
-                  </b>
-                  {d.shift?.note && <span className="sub">{d.shift.note}</span>}
-                </span>
-                {d.shift?.canSign && (
-                  <Form method="post" preventScrollReset>
-                    <input type="hidden" name="shift" value={d.shift.id} />
-                    <button
-                      className="pill-btn"
-                      name="intent"
-                      value="sign"
-                      disabled={busy}
-                    >
-                      Записатися
-                    </button>
-                  </Form>
-                )}
-                {d.shift?.canLeave && (
-                  <Form method="post" preventScrollReset>
-                    <input type="hidden" name="shift" value={d.shift.id} />
-                    <button
-                      className="pill-btn"
-                      name="intent"
-                      value="leave"
-                      disabled={busy}
-                    >
-                      Не зможу
-                    </button>
-                  </Form>
-                )}
-                {d.shift?.canEdit && (
-                  <Link
-                    className="pill-btn"
-                    to={`/work/shifts/${d.shift.id}/edit`}
-                    aria-label={`Змінити вахту: ${d.label}`}
+              {d.duty && (
+                <div className="list-row">
+                  <span
+                    className="who-av"
+                    style={
+                      d.shift?.mine
+                        ? { background: "var(--mine)", color: "#fff" }
+                        : undefined
+                    }
                   >
-                    <Icon name="pencil" small />
-                  </Link>
-                )}
-                {!d.shift && !d.past && (
-                  <Link
-                    className="pill-btn"
-                    to={`/work/shifts/new?date=${d.date}`}
-                  >
-                    Додати
-                  </Link>
-                )}
-              </div>
+                    <Icon name="shield" small />
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <b>
+                      {d.shift
+                        ? (d.shift.name ?? "Вільна вахта")
+                        : d.past
+                          ? "Вахти не було"
+                          : "Вахти ще немає"}
+                    </b>
+                    {d.shift?.note && (
+                      <span className="sub">{d.shift.note}</span>
+                    )}
+                  </span>
+                  {d.shift?.canSign && (
+                    <Form method="post" preventScrollReset>
+                      <input type="hidden" name="shift" value={d.shift.id} />
+                      <button
+                        className="pill-btn"
+                        name="intent"
+                        value="sign"
+                        disabled={busy}
+                      >
+                        Записатися
+                      </button>
+                    </Form>
+                  )}
+                  {d.shift?.canLeave && (
+                    <Form method="post" preventScrollReset>
+                      <input type="hidden" name="shift" value={d.shift.id} />
+                      <button
+                        className="pill-btn"
+                        name="intent"
+                        value="leave"
+                        disabled={busy}
+                      >
+                        Не зможу
+                      </button>
+                    </Form>
+                  )}
+                  {d.shift?.canEdit && (
+                    <Link
+                      className="pill-btn"
+                      to={`/work/shifts/${d.shift.id}/edit`}
+                      aria-label={`Змінити вахту: ${d.label}`}
+                    >
+                      <Icon name="pencil" small />
+                    </Link>
+                  )}
+                  {!d.shift && !d.past && (
+                    <Link
+                      className="pill-btn"
+                      to={`/work/shifts/new?date=${d.date}`}
+                    >
+                      Додати
+                    </Link>
+                  )}
+                </div>
+              )}
+              {d.patrols.map((p) => (
+                <div className="list-row" key={p.id}>
+                  <span className="who-av">
+                    <Icon name="pin" small />
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <b>{p.planned ? "Обхід · плануємо" : "Обхід"}</b>
+                    <span className="sub">{p.people.join(", ")}</span>
+                  </span>
+                  {p.canEdit && (
+                    <Link
+                      className="pill-btn"
+                      to={`/work/patrols/${p.id}/edit`}
+                      aria-label={`Змінити обхід: ${d.label}`}
+                    >
+                      <Icon name="pencil" small />
+                    </Link>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </section>
@@ -186,6 +219,14 @@ export default function Schedule({
         >
           <Icon name="plus" />
           Нова вахта
+        </Link>
+        <Link
+          viewTransition
+          className="btn btn-soft block"
+          to="/work/patrols/new"
+        >
+          <Icon name="pin" />
+          Обхід
         </Link>
       </div>
       <Credit />

@@ -20,6 +20,7 @@ import {
   complaintForTask,
   decideComplaint,
 } from "~/lib/complaints.server";
+import { patrolDateOf } from "~/lib/patrols.server";
 import {
   deleteTask,
   getTask,
@@ -29,7 +30,7 @@ import {
   takeTask,
   taskStatusOf,
 } from "~/lib/tasks.server";
-import { kyivDateKey, kyivNow } from "~/lib/time";
+import { dateLong, kyivDateKey, kyivNow } from "~/lib/time";
 import type { Route } from "./+types/work-task";
 
 export const meta: Route.MetaFunction = ({ data }) => [
@@ -67,6 +68,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     mine: found.mine,
     canDelete: found.canDelete,
     complaint: await complaintForTask(env, me, t.id),
+    patrol: await patrolDateOf(env, t.patrolId),
     history: found.history.map((h) => ({
       id: h.id,
       actor: h.actor,
@@ -126,7 +128,7 @@ export default function WorkTaskPage({
   loaderData,
   actionData,
 }: Route.ComponentProps) {
-  const { task: t, mine, canDelete, history, complaint } = loaderData;
+  const { task: t, mine, canDelete, history, complaint, patrol } = loaderData;
   const busy = useNavigation().state === "submitting";
   const other = BOARD_DATIVE[otherBoard(t.board)];
   return (
@@ -142,7 +144,7 @@ export default function WorkTaskPage({
       <TaskArticle
         task={t}
         details={t.details}
-        byline={`Додано ${t.created} · автор: ${t.author}${t.done ? ` · готово ${t.done}` : ""}`}
+        byline={`Додано ${t.created} · автор: ${t.author}${patrol ? ` · з обходу ${dateLong(patrol)}` : ""}${t.done ? ` · готово ${t.done}` : ""}`}
       >
         <Form method="post" className="task-status-form">
           <input type="hidden" name="intent" value="status" />

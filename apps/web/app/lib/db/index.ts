@@ -39,7 +39,11 @@ export type ActivityAction =
   | "shift.edited"
   | "shift.signed"
   | "shift.left"
-  | "shift.deleted";
+  | "shift.deleted"
+  | "patrol.recorded"
+  | "patrol.planned"
+  | "patrol.edited"
+  | "patrol.deleted";
 
 export function activity(
   db: Db,
@@ -53,7 +57,8 @@ export function activity(
       | "announcement"
       | "task"
       | "complaint"
-      | "shift";
+      | "shift"
+      | "patrol";
     entityId: number;
     details?: Record<string, unknown>;
   },
