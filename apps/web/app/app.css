@@ -3777,6 +3777,41 @@ html.is-dragging * {
   }
 }
 
+/* ---------- development only: «Увійти як» (Ctrl+Shift+U) ---------- */
+.dev-switch {
+  /* The reset drops the browser's own centring of a modal dialog. */
+  margin: auto;
+  width: min(420px, calc(100% - 24px));
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+  border: 0;
+  padding: 16px;
+  color: inherit;
+  background: var(--glass-strong);
+}
+.dev-switch[open] {
+  animation: rise 0.3s var(--ease-out) both;
+}
+.dev-switch::backdrop {
+  background: rgb(16 18 23 / 0.28);
+}
+.dev-switch-label {
+  margin: 14px 0 6px;
+  color: var(--muted);
+}
+.dev-switch-row {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.dev-switch-row[aria-current="true"] {
+  background: var(--mine-soft);
+}
+.dev-switch form + form .list-row {
+  border-top: 1px solid var(--line);
+}
+
 /* ---------- reduced motion: everything stops ---------- */
 @media (prefers-reduced-motion: reduce) {
   *,

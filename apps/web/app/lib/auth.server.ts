@@ -17,7 +17,7 @@ import {
 } from "./google";
 import { loginUrl, pagePath, safeNext } from "./next-path";
 import { limitActions } from "./rate-limit.server";
-import { rolesFor } from "./roles.server";
+import { listPeople, rolesFor } from "./roles.server";
 
 type SessionData = { residentId: number; version: number };
 
@@ -302,6 +302,25 @@ export async function devLogin(
     "Set-Cookie": await startSession(request, env, resident),
   });
 }
+
+/** Local people to switch between in development: signed in and with a room. */
+export async function devAccounts(env: Env) {
+  return (await listPeople(env)).flatMap((p) =>
+    p.residentId && p.name && p.room
+      ? [
+          {
+            id: p.residentId,
+            email: p.email,
+            name: p.name,
+            room: p.room,
+            roles: p.roles,
+            blocked: p.blocked,
+          },
+        ]
+      : [],
+  );
+}
+export type DevAccount = Awaited<ReturnType<typeof devAccounts>>[number];
 
 export async function logout(request: Request, env: Env) {
   const storage = sessionStorage(env, request);
