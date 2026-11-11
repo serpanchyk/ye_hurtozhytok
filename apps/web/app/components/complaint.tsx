@@ -1,4 +1,4 @@
-import { Form, useNavigation } from "react-router";
+import { Form, Link, useNavigation } from "react-router";
 
 import { FormField } from "~/components/controls";
 import { Icon } from "~/components/ui";
@@ -163,5 +163,31 @@ export function ComplaintActions({
         </details>
       )}
     </section>
+  );
+}
+
+/** A person's complaints as rows: what, when, its state. */
+export function ComplaintRows({
+  list,
+}: {
+  list: { id: number; title: string; ago: string; status: ComplaintStatus }[];
+}) {
+  return (
+    <div className="glass" style={{ padding: "4px 0" }}>
+      {list.map((c) => (
+        <Link
+          viewTransition
+          className="list-row"
+          to={`/complaints/${c.id}`}
+          key={c.id}
+        >
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <b>{c.title}</b>
+            <span className="sub">{c.ago}</span>
+          </span>
+          <ComplaintPill status={c.status} />
+        </Link>
+      ))}
+    </div>
   );
 }

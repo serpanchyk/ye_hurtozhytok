@@ -2,13 +2,16 @@ import { Link } from "react-router";
 
 import { Credit, Icon, LinkRow } from "~/components/ui";
 import { StatusPill } from "~/components/announcement";
+import { ComplaintRows } from "~/components/complaint";
+import { agoLabel } from "~/lib/announcements";
 import { listMine } from "~/lib/announcements.server";
+import { listMyComplaints } from "~/lib/complaints.server";
 import { requireProfile } from "~/lib/auth.server";
 import { MAX_ACTIVE, durationLabel, fmtMin } from "~/lib/booking";
 import { upcomingFor } from "~/lib/bookings.server";
 import { initials, roomLabel } from "~/lib/profile";
 import { ROLE_LABELS } from "~/lib/roles";
-import { dayName, kyivNow } from "~/lib/time";
+import { dayName, kyivDateKey, kyivNow } from "~/lib/time";
 import type { Route } from "./+types/me";
 
 export const handle = { tab: "me" };
@@ -18,9 +21,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const r = await requireProfile(request, env);
   const now = kyivNow();
-  const [list, proposals] = await Promise.all([
+  const [list, proposals, complaints] = await Promise.all([
     upcomingFor(env, r.id, now),
     listMine(env, r.id),
+    listMyComplaints(env, r.id),
   ]);
   return {
     name: r.name,
@@ -33,6 +37,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       title: a.title,
       status: a.status,
       reason: a.rejectReason,
+    })),
+    complaints: complaints.map((c) => ({
+      ...c,
+      ago: agoLabel(kyivDateKey(c.createdAt), now.date),
     })),
     today: now.date,
     bookings: list.map((b) => ({
@@ -78,7 +86,7 @@ export default function Me({ loaderData }: Route.ComponentProps) {
       )}
 
       <div className="section-h">
-        <h3>Мої записи</h3>
+        <h3>Мої прання</h3>
         <Link to="/laundry">Пральня</Link>
       </div>
       {p.bookings.length ? (
@@ -126,10 +134,23 @@ export default function Me({ loaderData }: Route.ComponentProps) {
         Одночасно можна мати до {MAX_ACTIVE} записів.
       </p>
 
+      <div className="section-h">
+        <h3>Мої звернення</h3>
+        <Link to="/complaints/new">Написати</Link>
+      </div>
+      {p.complaints.length ? (
+        <ComplaintRows list={p.complaints} />
+      ) : (
+        <div className="glass empty">
+          <b>Звернень немає</b>
+          Написати можна в «Послуги → Звернення».
+        </div>
+      )}
+
       {p.proposals.length > 0 && (
         <>
           <div className="section-h">
-            <h3>Мої пропозиції</h3>
+            <h3>Мої пропозиції оголошень</h3>
           </div>
           <div className="glass" style={{ padding: "4px 0" }}>
             {p.proposals.map((a) => (

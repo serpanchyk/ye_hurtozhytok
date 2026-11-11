@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
-import { initials } from "~/lib/profile";
 import { SECTIONS, type Tab } from "~/lib/sections";
 
 import {
@@ -228,23 +227,6 @@ export function Brand() {
       </svg>
       <span className="wordmark">єГуртожиток</span>
     </Link>
-  );
-}
-
-/** The header of a menu section: the brand and the person's initials, leading to «Моє». */
-export function SectionBar({ name }: { name: string }) {
-  return (
-    <div className="topbar">
-      <Brand />
-      <Link
-        className="avatar"
-        to="/me"
-        aria-label={`Моє: ${name}`}
-        style={{ textDecoration: "none" }}
-      >
-        {initials(name)}
-      </Link>
-    </div>
   );
 }
 

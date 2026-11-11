@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 
 import { AnnouncementRow, ImportantCard } from "~/components/announcement";
-import { Credit, Icon, SectionBar } from "~/components/ui";
+import { Credit, Icon, TopBar } from "~/components/ui";
 import { agoLabel, feedSections } from "~/lib/announcements";
 import { countPending, listPublished } from "~/lib/announcements.server";
 import { requireProfile } from "~/lib/auth.server";
@@ -31,7 +31,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const ago = (ms: number | null) =>
     ms ? agoLabel(kyivDateKey(ms), today) : "";
   return {
-    name: me.name,
     firstName: me.firstName ?? me.name.split(" ")[0],
     today,
     canPropose: canProposeAnnouncement(me),
@@ -51,7 +50,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const empty = p.important.length + p.upcoming.length + p.fresh.length === 0;
   return (
     <>
-      <SectionBar name={p.name} />
+      <TopBar />
       <h2 className="title" style={{ marginBottom: 16 }}>
         {first ? `Привіт, ${first}` : "Привіт!"}
       </h2>

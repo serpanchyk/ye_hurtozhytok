@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-import { ComplaintPill } from "~/components/complaint";
+import { ComplaintRows } from "~/components/complaint";
 import { Credit, Icon, TopBar } from "~/components/ui";
 import { agoLabel } from "~/lib/announcements";
 import { requireProfile } from "~/lib/auth.server";
@@ -59,22 +59,7 @@ export default function Complaints({ loaderData }: Route.ComponentProps) {
         <h3>Мої звернення</h3>
       </div>
       {list.length ? (
-        <div className="glass" style={{ padding: "4px 0" }}>
-          {list.map((c) => (
-            <Link
-              viewTransition
-              className="list-row"
-              to={`/complaints/${c.id}`}
-              key={c.id}
-            >
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <b>{c.title}</b>
-                <span className="sub">{c.ago}</span>
-              </span>
-              <ComplaintPill status={c.status} />
-            </Link>
-          ))}
-        </div>
+        <ComplaintRows list={list} />
       ) : (
         <div className="glass empty">
           <b>Звернень поки немає</b>

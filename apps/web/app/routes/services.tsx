@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-import { Credit, Icon, SectionBar, type IconName } from "~/components/ui";
+import { Credit, Icon, TopBar, type IconName } from "~/components/ui";
 import { countPending } from "~/lib/announcements.server";
 import { requireProfile } from "~/lib/auth.server";
 import { canPublishAnnouncements, isCouncil, isSquad } from "~/lib/permissions";
@@ -15,7 +15,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const me = await requireProfile(request, env);
   return {
-    name: me.name,
     // «Праця» is only for people with a role.
     work: isCouncil(me) || isSquad(me),
     pending: canPublishAnnouncements(me) ? await countPending(env) : 0,
@@ -46,10 +45,10 @@ function Tile({
 
 /** Every service of the dormitory in one place; the bottom menu stays short. */
 export default function Services({ loaderData }: Route.ComponentProps) {
-  const { name, work, pending } = loaderData;
+  const { work, pending } = loaderData;
   return (
     <>
-      <SectionBar name={name} />
+      <TopBar />
       <h2 className="title" style={{ marginBottom: 16 }}>
         Послуги
       </h2>
