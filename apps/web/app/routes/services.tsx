@@ -1,4 +1,6 @@
-import { Credit, LinkRow, SectionBar } from "~/components/ui";
+import { Link } from "react-router";
+
+import { Credit, Icon, SectionBar, type IconName } from "~/components/ui";
 import { countPending } from "~/lib/announcements.server";
 import { requireProfile } from "~/lib/auth.server";
 import { canPublishAnnouncements, isCouncil, isSquad } from "~/lib/permissions";
@@ -20,6 +22,28 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   };
 }
 
+function Tile({
+  to,
+  icon,
+  title,
+  count,
+}: {
+  to: string;
+  icon: IconName;
+  title: string;
+  count?: number;
+}) {
+  return (
+    <Link viewTransition className="glass service-tile" to={to}>
+      <span className="who-av">
+        <Icon name={icon} small />
+      </span>
+      {count ? <span className="count-pill">{count}</span> : null}
+      <b>{title}</b>
+    </Link>
+  );
+}
+
 /** Every service of the dormitory in one place; the bottom menu stays short. */
 export default function Services({ loaderData }: Route.ComponentProps) {
   const { name, work, pending } = loaderData;
@@ -29,29 +53,11 @@ export default function Services({ loaderData }: Route.ComponentProps) {
       <h2 className="title" style={{ marginBottom: 16 }}>
         Послуги
       </h2>
-      <div className="glass" style={{ padding: "4px 0" }}>
-        <LinkRow
-          to="/laundry"
-          icon="washer"
-          title="Пральня"
-          sub="Записатися на пралку, мої записи, пралки зараз"
-        />
-        <LinkRow
-          to="/board"
-          icon="board"
-          title="Дошка"
-          sub="Над чим працюють студрада й оперзагін"
-        />
-        {work && (
-          <LinkRow
-            to="/work"
-            icon="work"
-            title="Праця"
-            sub="Робота студради, загону й розпорядника"
-            count={pending}
-          />
-        )}
-      </div>
+      <nav className="service-grid" aria-label="Послуги">
+        <Tile to="/laundry" icon="washer" title="Пральня" />
+        <Tile to="/board" icon="board" title="Дошка" />
+        {work && <Tile to="/work" icon="work" title="Праця" count={pending} />}
+      </nav>
       <Credit />
     </>
   );

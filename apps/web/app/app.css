@@ -1615,7 +1615,8 @@ a.day:hover {
   transition: transform 0.3s var(--ease);
 }
 .ann-row:active,
-.ann-hero:active {
+.ann-hero:active,
+.service-tile:active {
   transform: scale(0.985);
 }
 .ann-row-text {
@@ -3698,6 +3699,36 @@ html:not(.booted) .ticket::after,
 .day[aria-current="true"],
 .days.has-pill > .pill {
   box-shadow: 0 10px 20px -10px rgb(16 18 23 / 0.55);
+}
+
+/* ---------- «Послуги»: two tiles a row, the icon above the name ---------- */
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.service-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 118px;
+  padding: 14px;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.3s var(--ease);
+}
+.service-tile b {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+.service-tile .count-pill {
+  position: absolute;
+  top: 14px;
+  right: 14px;
 }
 
 /* ---------- task boards ---------- */
