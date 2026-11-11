@@ -19,7 +19,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const me = await requireProfile(request, env);
   const c = await getComplaint(env, me, Number(params.id));
   if (!c) throw new Response("Такого звернення немає.", { status: 404 });
-  // Those who handle it work with it in «Праця».
+  // Those who handle it work with it in the work pages.
   if (!c.mine)
     throw redirect(
       c.taskId ? `/work/tasks/${c.taskId}` : `/work/complaints/${c.id}`,

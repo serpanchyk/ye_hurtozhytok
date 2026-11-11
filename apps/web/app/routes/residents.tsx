@@ -70,6 +70,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const signedIn = people.filter((p) => p.residentId !== null);
   return {
     manage,
+    // The site manager comes from their own section, the council from its.
+    back: manage ? "/work?s=manager" : "/work?s=council",
     stats: [
       { label: "зареєстровано", value: signedIn.length },
       {
@@ -235,7 +237,7 @@ export default function Residents({
 
   return (
     <>
-      <TopBar back="/work" title="Мешканці" />
+      <TopBar back={loaderData.back} title="Мешканці" />
       <p className="lede" style={{ margin: "0 4px 14px" }}>
         {loaderData.manage
           ? "Кожен, хто увійшов через пошту Політехніки, — мешканець; роль лише додає права. Відкрийте людину, щоб змінити ролі чи заблокувати."

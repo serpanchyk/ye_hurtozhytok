@@ -91,7 +91,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       </div>
 
       <div className="home-actions">
-        {/* Those who publish post from «Праця»; residents propose here. */}
+        {/* Those who publish post from the work pages; residents propose here. */}
         {p.canPropose && !p.decider && (
           <Link
             viewTransition

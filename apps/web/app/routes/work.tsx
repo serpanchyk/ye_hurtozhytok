@@ -1,47 +1,29 @@
 import { Link, redirect } from "react-router";
 
-import { PillGroup } from "~/components/pill-group";
 import { Credit, Icon, LinkRow, TopBar } from "~/components/ui";
 import { countPending } from "~/lib/announcements.server";
 import { listAppComplaints } from "~/lib/complaints.server";
 import { requireProfile } from "~/lib/auth.server";
-import {
-  canPublishAnnouncements,
-  isCouncil,
-  isSiteManager,
-  isSquad,
-  leadsSquad,
-} from "~/lib/permissions";
+import { canPublishAnnouncements, leadsSquad } from "~/lib/permissions";
+import { workSectionsFor } from "~/lib/sections";
 import type { Route } from "./+types/work";
 
-export const meta: Route.MetaFunction = () => [
-  { title: "Праця · єГуртожиток" },
+export const meta: Route.MetaFunction = ({ data }) => [
+  { title: `${data?.label ?? "Робота"} · єГуртожиток` },
 ];
-
-const SECTIONS = [
-  { id: "council", label: "Студрада" },
-  { id: "squad", label: "Оперзагін" },
-  { id: "manager", label: "Розпорядник" },
-] as const;
-type Section = (typeof SECTIONS)[number]["id"];
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const me = await requireProfile(request, env);
-  const mine = SECTIONS.filter((s) =>
-    s.id === "council"
-      ? isCouncil(me)
-      : s.id === "squad"
-        ? isSquad(me)
-        : isSiteManager(me),
-  );
-  // «Праця» is for people with a role; everyone else has nothing here.
-  if (mine.length === 0) throw redirect("/me");
+  const mine = workSectionsFor(me);
+  // Work sections are for people with a role; everyone else has none.
+  if (mine.length === 0) throw redirect("/services");
   const asked = new URL(request.url).searchParams.get("s");
-  const section: Section = mine.find((s) => s.id === asked)?.id ?? mine[0].id;
+  const found = mine.find((s) => s.id === asked) ?? mine[0];
+  const section = found.id;
   return {
     leads: leadsSquad(me),
-    sections: mine.map((s) => ({ id: s.id, label: s.label })),
+    label: found.label,
     section,
     pending:
       section === "council" && canPublishAnnouncements(me)
@@ -53,30 +35,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export default function Work({ loaderData }: Route.ComponentProps) {
-  const { sections, section, pending, appComplaints, leads } = loaderData;
+  const { label, section, pending, appComplaints, leads } = loaderData;
   return (
     <>
       <TopBar back="/services" />
       <h2 className="title" style={{ marginBottom: 16 }}>
-        Праця
+        {label}
       </h2>
-
-      {sections.length > 1 && (
-        <PillGroup className="seg" label="Роль" style={{ marginBottom: 14 }}>
-          {sections.map((s) => (
-            <Link
-              data-pill-item
-              key={s.id}
-              to={`?s=${s.id}`}
-              replace
-              preventScrollReset
-              aria-current={s.id === section ? "true" : undefined}
-            >
-              {s.label}
-            </Link>
-          ))}
-        </PillGroup>
-      )}
 
       <div className="glass" style={{ padding: "4px 0" }}>
         {section === "council" && (

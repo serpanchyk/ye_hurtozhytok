@@ -103,7 +103,7 @@ export function AnnouncementRow({
   a: Item;
   /** What the second line says for undated news, e.g. «вчора». */
   sub?: string;
-  /** Where the row leads; «Праця» opens its own page. */
+  /** Where the row leads; the work pages open its own page. */
   to?: string;
 }) {
   return (
@@ -151,7 +151,7 @@ export function AnnouncementRow({
 }
 
 /**
- * An announcement's page body, the same on the public page and in «Праця»:
+ * An announcement's page body, the same on the public page and in the work pages:
  * pictures, the text, sharing once published, the reason if turned down.
  */
 export function AnnouncementView({

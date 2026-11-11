@@ -205,7 +205,7 @@ export async function getAnnouncement(env: Env, actor: Actor, id: number) {
 
 /**
  * An announcement as its page shows it, the same on the public page and in
- * «Праця»: details rendered from Markdown, dates as words. Null when it may
+ * the work pages: details rendered from Markdown, dates as words. Null when it may
  * not be seen.
  */
 export async function announcementPage(env: Env, actor: Actor, id: number) {

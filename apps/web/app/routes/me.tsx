@@ -36,7 +36,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     telegram: r.telegram,
     blocked: r.blocked,
     roles: r.roles.map((role) => ROLE_LABELS[role]),
-    // Those who publish post from «Праця» and never have proposals.
+    // Those who publish post from the work pages and never have proposals.
     proposes: canProposeAnnouncement(r) && !canPublishAnnouncements(r),
     proposals: proposals.map((a) => ({
       id: a.id,

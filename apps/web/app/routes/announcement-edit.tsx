@@ -23,7 +23,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const a = await getAnnouncement(env, me, Number(params.id));
   if (!a || !a.canEdit)
     throw new Response("Це оголошення змінити не можна.", { status: 403 });
-  // Those who publish change announcements in «Праця»; the author changes a
+  // Those who publish change announcements in the work pages; the author changes a
   // proposal of their own on its public page.
   const work = canPublishAnnouncements(me);
   if (work !== inWork(new URL(request.url).pathname))

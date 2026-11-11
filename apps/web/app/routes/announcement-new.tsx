@@ -17,7 +17,7 @@ export const meta: Route.MetaFunction = () => [
   { title: "Нове оголошення · єГуртожиток" },
 ];
 
-// The same page proposes (/announcements/new) and, in «Праця», publishes
+// The same page proposes (/announcements/new) and, in the work pages, publishes
 // at once (/work/announcements/new); each person is sent to their own.
 export async function loader({ request, context }: Route.LoaderArgs) {
   const me = await requireProfile(request, context.cloudflare.env);
@@ -54,7 +54,7 @@ export default function NewAnnouncement({
   return (
     <>
       <TopBar
-        back={canPublish ? "/work" : "/"}
+        back={canPublish ? "/work?s=council" : "/"}
         title={canPublish ? "Нове оголошення" : "Запропонувати оголошення"}
       />
       {!canPublish && (

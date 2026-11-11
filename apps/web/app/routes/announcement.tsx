@@ -30,7 +30,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   return {
     ...page,
     // The author changes or withdraws their own proposal here; everything
-    // else people with the right do in «Праця».
+    // else people with the right do in the work pages.
     ownProposal: page.mine && page.a.status === "pending",
     decider: canPublishAnnouncements(me),
     sent: new URL(request.url).searchParams.get("sent") === "1",
@@ -104,8 +104,8 @@ export default function AnnouncementPage({
             className="btn btn-soft block"
             to={`/work/announcements/${a.id}`}
           >
-            <Icon name="work" small />
-            Відкрити в «Праці»
+            <Icon name="pencil" small />
+            Керувати оголошенням
           </Link>
         </div>
       )}

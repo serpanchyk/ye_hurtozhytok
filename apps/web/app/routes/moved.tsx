@@ -7,7 +7,7 @@ const MOVED: Record<string, string> = {
   // «Студрада» and «Люди й ролі» became one page, «Мешканці».
   "/council": "/residents",
   "/roles": "/residents",
-  // Proposals are reviewed in «Праця».
+  // Proposals are reviewed in the work pages.
   "/announcements/review": "/work/announcements/review",
 };
 

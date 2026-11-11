@@ -6,9 +6,10 @@ import { requireProfile } from "~/lib/auth.server";
 import {
   canProposeAnnouncement,
   canPublishAnnouncements,
-  isCouncil,
-  isSquad,
+  isSiteManager,
 } from "~/lib/permissions";
+import { listAppComplaints } from "~/lib/complaints.server";
+import { workHref, workSectionsFor } from "~/lib/sections";
 import type { Route } from "./+types/services";
 
 export const handle = { tab: "services" };
@@ -20,11 +21,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const me = await requireProfile(request, env);
   return {
-    // «Праця» is only for people with a role.
-    work: isCouncil(me) || isSquad(me),
-    // Those who publish post from «Праця»; everyone else proposes here.
+    // A tile per work section the person has.
+    work: workSectionsFor(me).map((s) => ({ ...s, to: workHref(s.id) })),
+    // Those who publish post from their section; everyone else proposes here.
     propose: canProposeAnnouncement(me) && !canPublishAnnouncements(me),
-    pending: canPublishAnnouncements(me) ? await countPending(env) : 0,
+    // What waits: proposals for the council, complaints about the app for
+    // the site manager.
+    waiting: {
+      council: canPublishAnnouncements(me) ? await countPending(env) : 0,
+      squad: 0,
+      manager: isSiteManager(me) ? (await listAppComplaints(env)).length : 0,
+    },
   };
 }
 
@@ -52,7 +59,7 @@ function Tile({
 
 /** Every service of the dormitory in one place; the bottom menu stays short. */
 export default function Services({ loaderData }: Route.ComponentProps) {
-  const { work, propose, pending } = loaderData;
+  const { work, propose, waiting } = loaderData;
   return (
     <>
       <TopBar />
@@ -70,7 +77,15 @@ export default function Services({ loaderData }: Route.ComponentProps) {
             title="Запропонувати оголошення"
           />
         )}
-        {work && <Tile to="/work" icon="work" title="Праця" count={pending} />}
+        {work.map((s) => (
+          <Tile
+            key={s.id}
+            to={s.to}
+            icon={s.icon}
+            title={s.label}
+            count={waiting[s.id]}
+          />
+        ))}
       </nav>
       <Credit />
     </>

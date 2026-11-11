@@ -29,7 +29,7 @@ import {
 
 /**
  * A board's cards with who works on them: the public view (public cards
- * only, the same for everyone) or the working view in «Праця» (every card,
+ * only, the same for everyone) or the working view in the work pages (every card,
  * only for those who keep the board; null for anyone else). Open cards
  * newest first, then the last finished ones.
  */

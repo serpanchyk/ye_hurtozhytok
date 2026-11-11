@@ -47,7 +47,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   return { decided: result.status };
 }
 
-/** An announcement in «Праця»: decide on a proposal, change it, remove it. */
+/** An announcement in the work pages: decide on a proposal, change it, remove it. */
 export default function WorkAnnouncement({
   loaderData,
   actionData,
@@ -57,7 +57,7 @@ export default function WorkAnnouncement({
   return (
     <>
       <TopBar
-        back={canDecide ? "/work/announcements/review" : "/work"}
+        back={canDecide ? "/work/announcements/review" : "/work?s=council"}
         title="Оголошення"
       />
 

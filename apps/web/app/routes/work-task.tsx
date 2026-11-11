@@ -123,7 +123,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   return null;
 }
 
-/** A card in «Праця»: change its state, take it, hand it over, edit, delete. */
+/** A card in the work pages: change its state, take it, hand it over, edit, delete. */
 export default function WorkTaskPage({
   loaderData,
   actionData,

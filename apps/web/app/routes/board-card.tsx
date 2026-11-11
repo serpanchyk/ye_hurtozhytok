@@ -18,7 +18,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const me = await requireProfile(request, env);
   const found = await getTask(env, me, Number(params.id));
-  // A private card is not on the public board; its keepers open it in «Праця».
+  // A private card is not on the public board; its keepers open it in the work pages.
   if (found && !found.task.public && found.full)
     throw redirect(`/work/tasks/${found.task.id}`);
   if (!found || !found.task.public)
@@ -42,7 +42,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   };
 }
 
-/** A public card, only to look at; those who keep the board change it in «Праця». */
+/** A public card, only to look at; those who keep the board change it in the work pages. */
 export default function BoardCardPage({ loaderData }: Route.ComponentProps) {
   const { keeper, task: t } = loaderData;
   return (
@@ -59,8 +59,8 @@ export default function BoardCardPage({ loaderData }: Route.ComponentProps) {
             className="btn btn-soft block"
             to={`/work/tasks/${t.id}`}
           >
-            <Icon name="work" small />
-            Відкрити в «Праці»
+            <Icon name="pencil" small />
+            Керувати карткою
           </Link>
         </div>
       )}

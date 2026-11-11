@@ -32,7 +32,7 @@ export default function Review({ loaderData }: Route.ComponentProps) {
   const { list } = loaderData;
   return (
     <>
-      <TopBar back="/work" title="Пропозиції оголошень" />
+      <TopBar back="/work?s=council" title="Пропозиції оголошень" />
       <p className="lede" style={{ margin: "0 4px 14px" }}>
         Від мешканців. Відкрийте пропозицію, щоб опублікувати її або відхилити з
         поясненням для автора.

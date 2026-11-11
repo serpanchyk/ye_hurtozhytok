@@ -78,7 +78,7 @@ function useMoving() {
   return { moving, error };
 }
 
-/** The working board in «Праця»: every card, private ones too, to change and drag. */
+/** The working board in the work pages: every card, private ones too, to change and drag. */
 export default function WorkBoard({ loaderData }: Route.ComponentProps) {
   usePolling(30_000);
   const { me, boards, board, filter, moved } = loaderData;
@@ -121,7 +121,7 @@ export default function WorkBoard({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <TopBar back="/work" title={BOARD_LABELS[board]} />
+      <TopBar back={`/work?s=${board}`} title={BOARD_LABELS[board]} />
       <h2 className="title" style={{ marginBottom: 6 }}>
         Робоча дошка
       </h2>
