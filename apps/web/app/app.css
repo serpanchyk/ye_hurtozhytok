@@ -2670,8 +2670,6 @@ input[type="search"]::-webkit-search-decoration {
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding: 4px 4px 10px;
-  margin: 0 -4px 4px;
   scrollbar-width: none;
 }
 .filter-row::-webkit-scrollbar {
@@ -3612,7 +3610,8 @@ html:not(.booted) .ticket::after,
 }
 
 /* Horizontal rows scroll edge to edge and leave room for their shadows. */
-.days {
+.days,
+.filter-row {
   padding: 6px 16px 20px;
   margin: -2px -16px -12px;
   scroll-padding-inline: 16px;
@@ -3672,32 +3671,42 @@ html:not(.booted) .ticket::after,
   color: var(--ink);
 }
 
+/* A dark pill glides under the chosen day, or the chosen filter chip. */
 .days.has-pill > .pill {
   border-radius: 18px;
+}
+.filter-row.has-pill > .pill {
+  border-radius: 999px;
+}
+:is(.days, .filter-row).has-pill > .pill {
   background: var(--ink);
 }
-.days.has-pill > .day[aria-current="true"]:not([data-pill-on]) {
+:is(.days, .filter-row).has-pill
+  > [data-pill-item][aria-current="true"]:not([data-pill-on]) {
   color: var(--ink);
 }
-.days.has-pill > .day[aria-current="true"]:not([data-pill-on]) small {
+:is(.days, .filter-row).has-pill
+  > [data-pill-item][aria-current="true"]:not([data-pill-on])
+  small {
   color: var(--muted);
 }
-.days.has-pill > .day[data-pill-on] {
+:is(.days, .filter-row).has-pill > [data-pill-item][data-pill-on] {
   color: #fff;
   background: transparent;
   box-shadow: none;
 }
-.days.has-pill > .day[data-pill-on] small {
+:is(.days, .filter-row).has-pill > [data-pill-item][data-pill-on] small {
   color: rgb(255 255 255 / 0.7);
 }
-.days.has-pill > .day:not([data-pill-on]) {
+:is(.days, .filter-row).has-pill > [data-pill-item]:not([data-pill-on]) {
   background: var(--glass-strong);
   box-shadow: var(--shadow-gloss);
 }
 
 /* Dark selected day: no white top highlight, a soft dark shadow instead. */
 .day[aria-current="true"],
-.days.has-pill > .pill {
+.days.has-pill > .pill,
+.filter-row.has-pill > .pill {
   box-shadow: 0 10px 20px -10px rgb(16 18 23 / 0.55);
 }
 

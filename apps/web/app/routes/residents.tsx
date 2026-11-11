@@ -8,6 +8,7 @@ import {
 } from "react-router";
 
 import { Check, ConfirmButton } from "~/components/controls";
+import { PillGroup } from "~/components/pill-group";
 import { Credit, TopBar } from "~/components/ui";
 import { requireProfile } from "~/lib/auth.server";
 import {
@@ -274,9 +275,10 @@ export default function Residents({
         {f !== "all" && <input type="hidden" name="f" value={f} />}
       </Form>
 
-      <nav className="filter-row" aria-label="Показати">
+      <PillGroup className="filter-row" label="Показати">
         {FILTERS.map((x) => (
           <Link
+            data-pill-item
             key={x.id}
             className="chip"
             to={link({ f: x.id })}
@@ -288,7 +290,7 @@ export default function Residents({
             <small>{all.filter((p) => matches(x.id, p.roles)).length}</small>
           </Link>
         ))}
-      </nav>
+      </PillGroup>
 
       <div className="glass people" style={{ padding: "4px 0" }}>
         {people.length === 0 && <p className="empty">Нікого не знайдено.</p>}

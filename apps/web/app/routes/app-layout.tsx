@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Outlet, useMatches } from "react-router";
 
 import { TabBar, type Tab } from "~/components/ui";
@@ -9,6 +10,7 @@ import {
 } from "~/lib/auth.server";
 import { useNavDirection } from "~/lib/nav-direction";
 import { inWork } from "~/lib/sections";
+import { useSteadyScroll } from "~/lib/use-steady-scroll";
 import { skipForPhotoViewer } from "~/lib/revalidate";
 import type { Route } from "./+types/app-layout";
 
@@ -26,6 +28,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export default function AppLayout({ loaderData }: Route.ComponentProps) {
   useNavDirection();
+  const pageRef = useRef<HTMLElement>(null);
+  useSteadyScroll(pageRef);
   const matches = useMatches();
   const last = matches.at(-1);
   const handle = last?.handle as
@@ -33,7 +37,7 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
   const tab = last && inWork(last.pathname) ? "services" : handle?.tab;
   return (
     <>
-      <main className={handle?.wide ? "page wide" : "page"}>
+      <main ref={pageRef} className={handle?.wide ? "page wide" : "page"}>
         <Outlet />
       </main>
       {!handle?.sheet && <TabBar active={tab ?? null} />}
