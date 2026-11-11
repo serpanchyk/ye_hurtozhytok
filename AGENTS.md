@@ -57,11 +57,18 @@ docs in the same change.
   the same SQL statement as the insert.
 - Every permission decision goes through `app/lib/permissions.ts`, and every
   action re-checks permissions on the server.
+- Two worlds: public screens only show (plus a resident's own actions such as
+  booking, proposing an announcement, writing a complaint); everything staff
+  change lives under `/work` («Праця»). Both are built from the same
+  components with different data and buttons.
+- Reuse before writing: an existing component, CSS class or animation is used
+  or extracted, never copied. The bottom menu comes from `app/lib/sections.ts`
+  and does not grow; new services go to «Послуги».
 - Write an `activity_log` entry for every change people make.
 - Forms must work without JavaScript (React Router `<Form>`); JavaScript only
   enhances them. Offline mode is read-only.
 - The service worker caches only `/`, `/announcements`, `/announcements/:id`,
-  `/laundry` and `/machines/*` (and their `.data`) plus `/media/*` pictures
+  `/services`, `/laundry` and `/machines/*` (and their `.data`) plus `/media/*` pictures
   for offline reading, never other personal pages; logout clears the cache.
   Bump `CACHE` in `public/sw.js` when caching rules change.
 - Reminders are Web Push only; email needs an own domain and is not built.

@@ -7,7 +7,7 @@ import { canPublishAnnouncements } from "~/lib/permissions";
 import { kyivDateKey, kyivNow } from "~/lib/time";
 import type { Route } from "./+types/announcements-review";
 
-export const handle = { tab: "work" };
+export const handle = { tab: "services" };
 export const meta: Route.MetaFunction = () => [
   { title: "Пропозиції оголошень · єГуртожиток" },
 ];

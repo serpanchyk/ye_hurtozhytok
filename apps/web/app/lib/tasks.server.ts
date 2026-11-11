@@ -50,13 +50,20 @@ async function assigneesOf(
 }
 
 /**
- * The board as this person may see it: everything for those who keep it,
- * otherwise public cards. Everyone sees who works on a card. Open cards
+ * A board's cards with who works on them: the public view (public cards
+ * only, the same for everyone) or the working view in «Праця» (every card,
+ * only for those who keep the board; null for anyone else). Open cards
  * newest first, then the last finished ones.
  */
-export async function listBoard(env: Env, actor: Actor, board: Board) {
+export async function listBoard(
+  env: Env,
+  actor: Actor,
+  board: Board,
+  view: "public" | "work",
+) {
+  const full = view === "work";
+  if (full && !canManageBoard(actor, board)) return null;
   const db = getDb(env);
-  const full = canManageBoard(actor, board);
   const where = (...extra: Parameters<typeof and>) =>
     and(
       eq(tasks.board, board),
@@ -84,23 +91,20 @@ export async function listBoard(env: Env, actor: Actor, board: Board) {
     db,
     all.map((t) => t.id),
   );
-  return {
-    full,
-    cards: all.map((t) => {
-      const who = people.get(t.id) ?? [];
-      return {
-        id: t.id,
-        title: t.title,
-        place: t.place,
-        status: t.status,
-        public: t.public,
-        createdAt: t.createdAt,
-        doneAt: t.doneAt,
-        assigneeIds: who.map((p) => p.id),
-        assignees: who.map((p) => p.name),
-      };
-    }),
-  };
+  return all.map((t) => {
+    const who = people.get(t.id) ?? [];
+    return {
+      id: t.id,
+      title: t.title,
+      place: t.place,
+      status: t.status,
+      public: t.public,
+      createdAt: t.createdAt,
+      doneAt: t.doneAt,
+      assigneeIds: who.map((p) => p.id),
+      assignees: who.map((p) => p.name),
+    };
+  });
 }
 
 /** One card with what this person may see and do, or null. */

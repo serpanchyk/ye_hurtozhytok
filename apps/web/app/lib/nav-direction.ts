@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 
+import { SECTIONS as MENU } from "./sections";
+
 /**
  * Tells the page transition which way to slide, through
  * <html data-nav="left|right|forward|back">: between bottom-menu sections in
@@ -7,8 +9,10 @@ import { useEffect } from "react";
  * other way. Without JavaScript nothing slides and nothing breaks.
  */
 
-// Section roots in menu order.
-const SECTIONS: Record<string, number> = { "/": 0, "/laundry": 1, "/me": 2 };
+// Section roots in menu order, from the menu itself.
+const SECTIONS: Record<string, number> = Object.fromEntries(
+  MENU.map((s, i) => [s.to, i]),
+);
 
 function currentSection(): number | null {
   const tabs = [...document.querySelectorAll(".tabbar .tab")];

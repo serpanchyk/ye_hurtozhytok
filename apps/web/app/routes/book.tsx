@@ -33,7 +33,7 @@ import {
 } from "~/lib/time";
 import type { Route } from "./+types/book";
 
-export const handle = { tab: "laundry", sheet: true };
+export const handle = { tab: "services", sheet: true };
 export const meta: Route.MetaFunction = () => [
   { title: "Записатися · єГуртожиток" },
 ];

@@ -16,7 +16,7 @@ import { notifyCancelledByCouncil } from "~/lib/scheduled.server";
 import { dayHeading, kyivMinuteToUtc, kyivNow } from "~/lib/time";
 import type { Route } from "./+types/booking";
 
-export const handle = { tab: "laundry" };
+export const handle = { tab: "services" };
 export const meta: Route.MetaFunction = () => [
   { title: "Мій запис · єГуртожиток" },
 ];

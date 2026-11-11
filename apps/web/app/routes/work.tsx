@@ -1,7 +1,7 @@
 import { Link, redirect } from "react-router";
 
 import { PillGroup } from "~/components/pill-group";
-import { Credit, LinkRow, SectionBar } from "~/components/ui";
+import { Credit, LinkRow, TopBar } from "~/components/ui";
 import { countPending } from "~/lib/announcements.server";
 import { requireProfile } from "~/lib/auth.server";
 import {
@@ -12,7 +12,7 @@ import {
 } from "~/lib/permissions";
 import type { Route } from "./+types/work";
 
-export const handle = { tab: "work" };
+export const handle = { tab: "services" };
 export const meta: Route.MetaFunction = () => [
   { title: "Праця · єГуртожиток" },
 ];
@@ -39,7 +39,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const asked = new URL(request.url).searchParams.get("s");
   const section: Section = mine.find((s) => s.id === asked)?.id ?? mine[0].id;
   return {
-    name: me.name,
     sections: mine.map((s) => ({ id: s.id, label: s.label })),
     section,
     pending:
@@ -50,10 +49,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export default function Work({ loaderData }: Route.ComponentProps) {
-  const { name, sections, section, pending } = loaderData;
+  const { sections, section, pending } = loaderData;
   return (
     <>
-      <SectionBar name={name} />
+      <TopBar back="/services" />
       <h2 className="title" style={{ marginBottom: 16 }}>
         Праця
       </h2>
@@ -79,7 +78,7 @@ export default function Work({ loaderData }: Route.ComponentProps) {
         {section === "council" && (
           <>
             <LinkRow
-              to="/board?b=council"
+              to="/work/board?b=council"
               icon="board"
               title="Дошка студради"
               sub="Усі картки, приватні теж"
@@ -108,13 +107,13 @@ export default function Work({ loaderData }: Route.ComponentProps) {
         {section === "squad" && (
           <>
             <LinkRow
-              to="/board?b=squad"
+              to="/work/board?b=squad"
               icon="board"
               title="Дошка загону"
               sub="Усі картки, приватні теж"
             />
             <LinkRow
-              to="/tasks/new?b=squad"
+              to="/work/tasks/new?b=squad"
               icon="plus"
               title="Нова картка"
               sub="На дошку загону"

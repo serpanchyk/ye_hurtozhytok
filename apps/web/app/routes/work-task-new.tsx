@@ -6,9 +6,9 @@ import { requireProfile } from "~/lib/auth.server";
 import { canManageBoard } from "~/lib/permissions";
 import { BOARD_LABELS, defaultPublic, isBoard, type Board } from "~/lib/tasks";
 import { createTask } from "~/lib/tasks.server";
-import type { Route } from "./+types/task-new";
+import type { Route } from "./+types/work-task-new";
 
-export const handle = { tab: "board" };
+export const handle = { tab: "services" };
 export const meta: Route.MetaFunction = () => [
   { title: "Нова картка · єГуртожиток" },
 ];
@@ -43,7 +43,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       status: 403,
     });
   if (!result.ok) return data({ errors: result.errors }, { status: 400 });
-  throw redirect(`/tasks/${result.id}`);
+  throw redirect(`/work/tasks/${result.id}`);
 }
 
 export default function NewTask({
@@ -53,7 +53,7 @@ export default function NewTask({
   const { board } = loaderData;
   return (
     <>
-      <TopBar back={`/board?b=${board}`} title="Нова картка" />
+      <TopBar back={`/work/board?b=${board}`} title="Нова картка" />
       <p className="lede" style={{ margin: "0 4px 14px" }}>
         На дошку «{BOARD_LABELS[board]}».
       </p>

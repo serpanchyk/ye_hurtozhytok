@@ -33,7 +33,7 @@ import { usePolling } from "~/lib/use-polling";
 import type { Route } from "./+types/machine";
 import "../timeline.css";
 
-export const handle = { tab: "laundry" };
+export const handle = { tab: "services" };
 export const meta: Route.MetaFunction = ({ data }) => [
   { title: `${data?.machine.name ?? "Пралка"} · єГуртожиток` },
 ];

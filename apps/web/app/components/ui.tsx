@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router";
 
 import { initials } from "~/lib/profile";
+import { SECTIONS, type Tab } from "~/lib/sections";
 
 import {
   BUFFER_MIN,
@@ -34,6 +35,7 @@ export type IconName =
   | "board"
   | "lock"
   | "work"
+  | "grid"
   | "x";
 
 /** One SVG sprite per page; icons reference it with <use>. */
@@ -122,6 +124,12 @@ export function IconSprite() {
       <symbol id="i-board" viewBox="0 0 24 24">
         <rect x="3.5" y="4" width="17" height="16" rx="3.5" />
         <path d="M9.2 4v16M14.8 4v16M5.8 8h1.6M11.2 8h1.6M11.2 11.5h1.6M16.6 8h1.6" />
+      </symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24">
+        <rect x="4" y="4" width="6.5" height="6.5" rx="2" />
+        <rect x="13.5" y="4" width="6.5" height="6.5" rx="2" />
+        <rect x="4" y="13.5" width="6.5" height="6.5" rx="2" />
+        <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2" />
       </symbol>
       <symbol id="i-work" viewBox="0 0 24 24">
         <rect x="3.5" y="7.5" width="17" height="12" rx="3" />
@@ -471,21 +479,11 @@ export function Ticket({
   );
 }
 
-export type Tab = "home" | "laundry" | "board" | "work" | "me" | null;
+export type { Tab };
 
-/** Sections of the app; each section owns its own actions. */
-export function TabBar({ active, work }: { active: Tab; work: boolean }) {
-  const tabs = [
-    { id: "home", to: "/", icon: "home", label: "Головна" },
-    { id: "laundry", to: "/laundry", icon: "washer", label: "Пральня" },
-    { id: "board", to: "/board", icon: "board", label: "Дошка" },
-    // «Праця» only for people with a role: the council, the squad, the site manager.
-    ...(work
-      ? [{ id: "work", to: "/work", icon: "work", label: "Праця" } as const]
-      : []),
-    { id: "me", to: "/me", icon: "user", label: "Моє" },
-  ] as const;
-  const index = tabs.findIndex((t) => t.id === active);
+/** The bottom menu; each section owns its own actions. */
+export function TabBar({ active }: { active: Tab }) {
+  const index = SECTIONS.findIndex((t) => t.id === active);
   return (
     <nav className="tabbar" aria-label="Розділи">
       {/* One pill under the current section; it glides on page changes. */}
@@ -496,7 +494,7 @@ export function TabBar({ active, work }: { active: Tab; work: boolean }) {
           style={{ gridColumn: index + 1 }}
         />
       )}
-      {tabs.map((t, i) => (
+      {SECTIONS.map((t, i) => (
         <Link
           key={t.id}
           viewTransition

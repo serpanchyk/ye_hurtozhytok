@@ -4,9 +4,9 @@ import { TaskForm } from "~/components/task-form";
 import { Credit, TopBar } from "~/components/ui";
 import { requireProfile } from "~/lib/auth.server";
 import { getTask, updateTask } from "~/lib/tasks.server";
-import type { Route } from "./+types/task-edit";
+import type { Route } from "./+types/work-task-edit";
 
-export const handle = { tab: "board" };
+export const handle = { tab: "services" };
 export const meta: Route.MetaFunction = () => [
   { title: "Змінити картку · єГуртожиток" },
 ];
@@ -38,7 +38,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   const result = await updateTask(env, me, id, await request.formData());
   if (!result) throw new Response(NOT_YOURS, { status: 403 });
   if (!result.ok) return data({ errors: result.errors }, { status: 400 });
-  throw redirect(`/tasks/${id}`);
+  throw redirect(`/work/tasks/${id}`);
 }
 
 export default function EditTask({
@@ -47,7 +47,7 @@ export default function EditTask({
 }: Route.ComponentProps) {
   return (
     <>
-      <TopBar back={`/tasks/${loaderData.id}`} title="Змінити картку" />
+      <TopBar back={`/work/tasks/${loaderData.id}`} title="Змінити картку" />
       <TaskForm
         initial={loaderData.initial}
         errors={actionData?.errors}

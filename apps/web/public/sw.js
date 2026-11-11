@@ -1,9 +1,10 @@
 // єГуртожиток service worker: offline read-only pages and booking reminders.
 // Bump the version when the caching rules change: activate drops older caches.
-const CACHE = "eh-v6";
+const CACHE = "eh-v7";
 
-// The home page with announcements, announcements themselves, the laundry
-// page and machine pages are kept for offline reading; «Моє», profile,
+// The home page with announcements, announcements themselves, «Послуги» (the
+// way to the laundry), the laundry page and machine pages are kept for
+// offline reading; «Моє», profile,
 // bookings, forms, the review queue, council and roles are never cached.
 // Logout clears everything. React Router fetches page data from
 // "<path>.data" ("/_root.data" for "/"), so data requests follow the same rule.
@@ -15,6 +16,7 @@ const pagePath = (path) =>
       : path;
 const OFFLINE_OK = (path) =>
   path === "/" ||
+  path === "/services" ||
   path === "/laundry" ||
   path.startsWith("/machines/") ||
   path === "/announcements" ||

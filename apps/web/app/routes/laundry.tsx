@@ -7,7 +7,7 @@ import {
   Port,
   StripScale,
   Ticket,
-  SectionBar,
+  TopBar,
 } from "~/components/ui";
 import { requireProfile } from "~/lib/auth.server";
 import { MAX_ACTIVE, countdown, fmtMin, machineNow } from "~/lib/booking";
@@ -17,7 +17,7 @@ import { dayHeading, kyivMinuteToUtc, kyivNow } from "~/lib/time";
 import { usePolling } from "~/lib/use-polling";
 import type { Route } from "./+types/laundry";
 
-export const handle = { tab: "laundry", wide: true };
+export const handle = { tab: "services", wide: true };
 export const meta: Route.MetaFunction = () => [
   { title: "Пральня · єГуртожиток" },
 ];
@@ -34,7 +34,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const first = upcoming[0];
   return {
-    name: resident.name,
     blocked: resident.blocked,
     now,
     full: upcoming.length >= MAX_ACTIVE,
@@ -90,10 +89,10 @@ function stateText(state: ReturnType<typeof machineNow>, working: boolean) {
 
 export default function Laundry({ loaderData }: Route.ComponentProps) {
   usePolling(20_000);
-  const { name, blocked, full, machines, next, more, now } = loaderData;
+  const { blocked, full, machines, next, more, now } = loaderData;
   return (
     <>
-      <SectionBar name={name} />
+      <TopBar back="/services" />
       <h2 className="title" style={{ marginBottom: 16 }}>
         Пральня
       </h2>

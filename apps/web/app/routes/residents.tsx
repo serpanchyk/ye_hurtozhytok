@@ -24,7 +24,7 @@ import { setBlocked } from "~/lib/residents.server";
 import { listPeople, setRoles } from "~/lib/roles.server";
 import type { Route } from "./+types/residents";
 
-export const handle = { tab: "work" };
+export const handle = { tab: "services" };
 export const meta: Route.MetaFunction = () => [
   { title: "Мешканці · єГуртожиток" },
 ];
