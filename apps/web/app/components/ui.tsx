@@ -125,9 +125,10 @@ export function IconSprite() {
         <rect x="3.5" y="4" width="17" height="16" rx="3.5" />
         <path d="M9.2 4v16M14.8 4v16M5.8 8h1.6M11.2 8h1.6M11.2 11.5h1.6M16.6 8h1.6" />
       </symbol>
+      {/* «walk» from Tabler Icons (MIT, tabler.io/icons). */}
       <symbol id="i-walk" viewBox="0 0 24 24">
-        <circle cx="13.5" cy="4.2" r="1.9" />
-        <path d="M12.6 8 10.8 14.2l-2.6 6.3M10.8 14.2l2.9 2.4.6 4.4M12.4 9.6l-3 2.1-.9 2.8M12.4 9.6l3 2.7 2.8.7" />
+        <circle cx="13" cy="4" r="1" />
+        <path d="M7 21l3-4M16 21l-2-4-3-3 1-6M6 12l2-3 4-1 3 3 3 1" />
       </symbol>
       <symbol id="i-grid" viewBox="0 0 24 24">
         <rect x="4" y="4" width="6.5" height="6.5" rx="2" />
