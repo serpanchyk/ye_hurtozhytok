@@ -181,19 +181,30 @@ export function TaskArticle({
         <p className="ann-by">{byline}</p>
       </article>
       {children}
-      <div className="glass" style={{ padding: "4px 0", marginTop: 10 }}>
-        <div className="list-row">
-          <span className="who-av">
-            <Icon name="user" small />
-          </span>
-          <span style={{ flex: 1, minWidth: 0 }}>
-            <b>
-              {task.assignees.length ? task.assignees.join(", ") : "Поки ніхто"}
-            </b>
-            <span className="sub">Виконують</span>
-          </span>
-        </div>
-      </div>
+      <AssigneesRow names={task.assignees} label="Виконують" />
     </>
+  );
+}
+
+/** Who works on a card, or «Поки ніхто». */
+export function AssigneesRow({
+  names,
+  label,
+}: {
+  names: string[];
+  label: string;
+}) {
+  return (
+    <div className="glass" style={{ padding: "4px 0", marginTop: 10 }}>
+      <div className="list-row">
+        <span className="who-av">
+          <Icon name="user" small />
+        </span>
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <b>{names.length ? names.join(", ") : "Поки ніхто"}</b>
+          <span className="sub">{label}</span>
+        </span>
+      </div>
+    </div>
   );
 }

@@ -34,6 +34,21 @@ export const BOARDS = ["council", "squad"] as const;
 export type Board = (typeof BOARDS)[number];
 export const TASK_STATUSES = ["new", "in_progress", "done"] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
+// What a complaint is about; the topic decides who gets it (lib/complaints.ts).
+export const COMPLAINT_TOPICS = [
+  "electricity",
+  "plumbing",
+  "furniture",
+  "laundry",
+  "cleaning",
+  "other",
+  "noise",
+  "strangers",
+  "safety",
+  "rules",
+  "app",
+] as const;
+export type ComplaintTopic = (typeof COMPLAINT_TOPICS)[number];
 
 // All *_at columns hold UTC milliseconds.
 
@@ -236,6 +251,33 @@ export const taskAssignees = sqliteTable(
   ],
 );
 
+// A resident's complaint. One about the dormitory becomes a private card on
+// the council's or the squad's board, and its state is that card's column;
+// one about the app has no card and the site manager closes it.
+export const complaints = sqliteTable(
+  "complaints",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    // Null is kept for anonymous complaints later (docs/v2-plan.md).
+    authorId: integer("author_id").references(() => residents.id),
+    topic: text("topic", { enum: COMPLAINT_TOPICS }).notNull(),
+    body: text("body").notNull(),
+    place: text("place"),
+    taskId: integer("task_id").references(() => tasks.id),
+    // What those who handle it tell the author; required to turn it down.
+    reply: text("reply"),
+    rejectedAt: integer("rejected_at"),
+    // Only for complaints about the app, which have no card.
+    resolvedAt: integer("resolved_at"),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => [
+    index("complaints_author_idx").on(t.authorId, t.createdAt),
+    index("complaints_task_idx").on(t.taskId),
+  ],
+);
+
 // One row per device still to be notified; the minute cron sends them in
 // small batches so a broadcast never exceeds the Worker's subrequest limit.
 export const pushOutbox = sqliteTable(
@@ -279,3 +321,4 @@ export type AnnouncementImage = typeof announcementImages.$inferSelect;
 export type Machine = typeof machines.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
+export type Complaint = typeof complaints.$inferSelect;

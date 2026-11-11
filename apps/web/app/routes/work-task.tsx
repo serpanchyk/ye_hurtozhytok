@@ -2,6 +2,7 @@ import { Form, Link, data, redirect, useNavigation } from "react-router";
 
 import { ConfirmButton } from "~/components/controls";
 import { TaskArticle } from "~/components/board";
+import { ComplaintActions, ComplaintDetails } from "~/components/complaint";
 import { PillGroup } from "~/components/pill-group";
 import { Credit, Icon, TopBar } from "~/components/ui";
 import { agoLabel } from "~/lib/announcements";
@@ -15,12 +16,18 @@ import {
   otherBoard,
 } from "~/lib/tasks";
 import {
+  complaintCardMoved,
+  complaintForTask,
+  decideComplaint,
+} from "~/lib/complaints.server";
+import {
   deleteTask,
   getTask,
   leaveTask,
   moveTask,
   setTaskStatus,
   takeTask,
+  taskStatusOf,
 } from "~/lib/tasks.server";
 import { kyivDateKey, kyivNow } from "~/lib/time";
 import type { Route } from "./+types/work-task";
@@ -59,6 +66,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     },
     mine: found.mine,
     canDelete: found.canDelete,
+    complaint: await complaintForTask(env, me, t.id),
     history: found.history.map((h) => ({
       id: h.id,
       actor: h.actor,
@@ -71,12 +79,21 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 const NOT_YOURS = "Це може робити лише той, хто веде цю дошку.";
 
 export async function action({ request, params, context }: Route.ActionArgs) {
-  const env = context.cloudflare.env;
+  const { env, ctx } = context.cloudflare;
   const me = await requireProfile(request, env);
   const id = Number(params.id);
   const form = await request.formData();
   const intent = form.get("intent");
 
+  if (intent === "answer" || intent === "reject") {
+    const c = await complaintForTask(env, me, id);
+    if (!c) return data({ error: NOT_YOURS }, { status: 403 });
+    const result = await decideComplaint(env, ctx, me, c.id, intent, form);
+    if (!result.ok) return data({ error: result.error }, { status: 400 });
+    // A turned-down complaint's card has left the board.
+    if (intent === "reject") throw redirect(`/work/board?b=${c.board}`);
+    return null;
+  }
   if (intent === "delete") {
     const board = await deleteTask(env, me, id);
     if (!board) return data({ error: "Видалити не вдалося." }, { status: 403 });
@@ -87,6 +104,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     if (!to) return data({ error: NOT_YOURS }, { status: 403 });
     throw redirect(`/work/board?b=${otherBoard(to)}&moved=${to}`);
   }
+  const before = await taskStatusOf(env, id);
   let ok = false;
   if (intent === "take") ok = await takeTask(env, me, id);
   else if (intent === "leave") ok = await leaveTask(env, me, id);
@@ -97,6 +115,9 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     ok = await setTaskStatus(env, me, id, status);
   }
   if (!ok) return data({ error: NOT_YOURS }, { status: 403 });
+  const after = await taskStatusOf(env, id);
+  if (before && after)
+    await complaintCardMoved(env, ctx, me.id, id, before, after);
   return null;
 }
 
@@ -105,7 +126,7 @@ export default function WorkTaskPage({
   loaderData,
   actionData,
 }: Route.ComponentProps) {
-  const { task: t, mine, canDelete, history } = loaderData;
+  const { task: t, mine, canDelete, history, complaint } = loaderData;
   const busy = useNavigation().state === "submitting";
   const other = BOARD_DATIVE[otherBoard(t.board)];
   return (
@@ -142,6 +163,21 @@ export default function WorkTaskPage({
           </PillGroup>
         </Form>
       </TaskArticle>
+
+      {complaint && (
+        <>
+          <div className="section-h">
+            <h3>Звернення</h3>
+          </div>
+          <ComplaintDetails c={complaint} byline="Від мешканця" withAuthor />
+          <ComplaintActions
+            id={complaint.id}
+            status={complaint.status}
+            reply={complaint.reply}
+            canResolve={false}
+          />
+        </>
+      )}
 
       <div className="home-actions">
         {!mine && t.status !== "done" && (

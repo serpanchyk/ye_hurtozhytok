@@ -1,5 +1,7 @@
-import { and, asc, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
 
+import { assigneesOf } from "./assignees.server";
+import { isComplaintCard } from "./complaints.server";
 import { activity, getDb, type Db } from "./db";
 import {
   activityLog,
@@ -24,30 +26,6 @@ import {
   type TaskErrors,
   type TaskStatus,
 } from "./tasks";
-
-type Person = { id: number; name: string };
-
-/** People working on each of the given cards, alphabetically. */
-async function assigneesOf(
-  db: Db,
-  taskIds: number[],
-): Promise<Map<number, Person[]>> {
-  const result = new Map<number, Person[]>(taskIds.map((id) => [id, []]));
-  if (taskIds.length === 0) return result;
-  const rows = await db
-    .select({
-      taskId: taskAssignees.taskId,
-      id: residents.id,
-      name: residents.name,
-    })
-    .from(taskAssignees)
-    .innerJoin(residents, eq(residents.id, taskAssignees.residentId))
-    .where(inArray(taskAssignees.taskId, taskIds))
-    .orderBy(asc(residents.name))
-    .all();
-  for (const { taskId, ...person } of rows) result.get(taskId)?.push(person);
-  return result;
-}
 
 /**
  * A board's cards with who works on them: the public view (public cards
@@ -166,7 +144,8 @@ export async function getTask(env: Env, actor: Actor, id: number) {
       assignees: assignees.map((p) => p.name),
     },
     mine: assignees.some((p) => p.id === actor.id),
-    canDelete: canDeleteTask(actor, t),
+    // A card from a complaint is turned down, never deleted.
+    canDelete: canDeleteTask(actor, t) && !(await isComplaintCard(env, id)),
     history: history.map((h) => ({
       id: h.id,
       actor: h.actor,
@@ -388,7 +367,8 @@ export async function deleteTask(
 ): Promise<Board | null> {
   const db = getDb(env);
   const t = await db.select().from(tasks).where(eq(tasks.id, id)).get();
-  if (!t || !canDeleteTask(actor, t)) return null;
+  if (!t || !canDeleteTask(actor, t) || (await isComplaintCard(env, id)))
+    return null;
   await db
     .update(tasks)
     .set({ deletedAt: Date.now() })
@@ -401,4 +381,14 @@ export async function deleteTask(
     details: { title: t.title },
   });
   return t.board;
+}
+
+/** A card's column now, to tell a complaint's author when it changes. */
+export async function taskStatusOf(env: Env, id: number) {
+  const t = await getDb(env)
+    .select({ status: tasks.status })
+    .from(tasks)
+    .where(eq(tasks.id, id))
+    .get();
+  return t?.status ?? null;
 }

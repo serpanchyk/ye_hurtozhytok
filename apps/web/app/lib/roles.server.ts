@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
 import { activity, getDb } from "./db";
 import { residents, roleGrants, type Role } from "./db/schema";
@@ -13,6 +13,20 @@ export async function rolesFor(env: Env, email: string): Promise<Role[]> {
     .where(eq(roleGrants.email, email.toLowerCase()))
     .all();
   return sortRoles(rows.map((r) => r.role));
+}
+
+/** Residents who hold any of these roles, e.g. to notify them. */
+export async function idsWithRoles(
+  env: Env,
+  roles: readonly Role[],
+): Promise<number[]> {
+  const rows = await getDb(env)
+    .selectDistinct({ id: residents.id })
+    .from(residents)
+    .innerJoin(roleGrants, sql`${roleGrants.email} = lower(${residents.email})`)
+    .where(inArray(roleGrants.role, [...roles]))
+    .all();
+  return rows.map((r) => r.id);
 }
 
 export type Person = {

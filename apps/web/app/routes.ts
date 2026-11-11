@@ -21,6 +21,9 @@ export default [
     route("announcements/:id", "routes/announcement.tsx"),
     route("announcements/:id/edit", "routes/announcement-edit.tsx"),
     route("services", "routes/services.tsx"),
+    route("complaints", "routes/complaints.tsx"),
+    route("complaints/new", "routes/complaint-new.tsx"),
+    route("complaints/:id", "routes/complaint.tsx"),
     route("laundry", "routes/laundry.tsx"),
     route("board", "routes/board.tsx"),
     route("board/:id", "routes/board-card.tsx"),
@@ -30,6 +33,8 @@ export default [
     route("bookings/:id", "routes/booking.tsx"),
     route("work", "routes/work.tsx"),
     route("work/board", "routes/work-board.tsx"),
+    route("work/complaints", "routes/work-complaints.tsx"),
+    route("work/complaints/:id", "routes/work-complaint.tsx"),
     route("work/announcements/new", "routes/announcement-new.tsx", {
       id: "work-announcement-new",
     }),

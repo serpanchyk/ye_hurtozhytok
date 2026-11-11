@@ -3,6 +3,7 @@ import { Link, redirect } from "react-router";
 import { PillGroup } from "~/components/pill-group";
 import { Credit, LinkRow, TopBar } from "~/components/ui";
 import { countPending } from "~/lib/announcements.server";
+import { listAppComplaints } from "~/lib/complaints.server";
 import { requireProfile } from "~/lib/auth.server";
 import {
   canPublishAnnouncements,
@@ -44,11 +45,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       section === "council" && canPublishAnnouncements(me)
         ? await countPending(env)
         : 0,
+    appComplaints:
+      section === "manager" ? (await listAppComplaints(env)).length : 0,
   };
 }
 
 export default function Work({ loaderData }: Route.ComponentProps) {
-  const { sections, section, pending } = loaderData;
+  const { sections, section, pending, appComplaints } = loaderData;
   return (
     <>
       <TopBar back="/services" />
@@ -120,12 +123,21 @@ export default function Work({ loaderData }: Route.ComponentProps) {
           </>
         )}
         {section === "manager" && (
-          <LinkRow
-            to="/residents"
-            icon="shield"
-            title="Мешканці й ролі"
-            sub="Видати й зняти ролі, заблокувати"
-          />
+          <>
+            <LinkRow
+              to="/residents"
+              icon="shield"
+              title="Мешканці й ролі"
+              sub="Видати й зняти ролі, заблокувати"
+            />
+            <LinkRow
+              to="/work/complaints"
+              icon="mail"
+              title="Звернення про застосунок"
+              sub={appComplaints ? "Чекають відповіді" : "Нових немає"}
+              count={appComplaints}
+            />
+          </>
         )}
       </div>
       <Credit />

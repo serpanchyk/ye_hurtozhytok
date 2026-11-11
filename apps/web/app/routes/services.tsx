@@ -56,6 +56,7 @@ export default function Services({ loaderData }: Route.ComponentProps) {
       <nav className="service-grid" aria-label="Послуги">
         <Tile to="/laundry" icon="washer" title="Пральня" />
         <Tile to="/board" icon="board" title="Дошка" />
+        <Tile to="/complaints" icon="mail" title="Звернення" />
         {work && <Tile to="/work" icon="work" title="Праця" count={pending} />}
       </nav>
       <Credit />

@@ -149,3 +149,31 @@ export function canDeleteTask(actor: Actor, task: TaskRef): boolean {
     isSiteManager(actor)
   );
 }
+
+/** Any resident who is not blocked may write a complaint. */
+export function canWriteComplaint(actor: Actor): boolean {
+  return !actor.blocked;
+}
+
+/**
+ * Those who keep the board its card is on handle a complaint (it follows the
+ * card when the card is handed over); one about the app, the site manager.
+ */
+export function canHandleComplaint(
+  actor: WithRoles,
+  complaint: { board: Board | null },
+): boolean {
+  return complaint.board
+    ? canManageBoard(actor, complaint.board)
+    : isSiteManager(actor);
+}
+
+/** The author and those who handle it; never anyone else. */
+export function canSeeComplaint(
+  actor: Actor,
+  complaint: { authorId: number | null; board: Board | null },
+): boolean {
+  return (
+    complaint.authorId === actor.id || canHandleComplaint(actor, complaint)
+  );
+}

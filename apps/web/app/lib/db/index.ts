@@ -30,14 +30,24 @@ export type ActivityAction =
   | "task.taken"
   | "task.left"
   | "task.moved"
-  | "task.deleted";
+  | "task.deleted"
+  | "complaint.created"
+  | "complaint.answered"
+  | "complaint.rejected"
+  | "complaint.resolved";
 
 export function activity(
   db: Db,
   entry: {
     actorId: number;
     action: ActivityAction;
-    entity: "booking" | "resident" | "role_grant" | "announcement" | "task";
+    entity:
+      | "booking"
+      | "resident"
+      | "role_grant"
+      | "announcement"
+      | "task"
+      | "complaint";
     entityId: number;
     details?: Record<string, unknown>;
   },

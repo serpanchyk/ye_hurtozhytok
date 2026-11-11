@@ -18,7 +18,6 @@ import {
   announcementImages,
   announcements,
   residents,
-  roleGrants,
   type Announcement,
 } from "./db/schema";
 import {
@@ -30,6 +29,7 @@ import {
   type Actor,
 } from "./permissions";
 import { drainOutbox, enqueueBroadcast, notify } from "./push.server";
+import { idsWithRoles } from "./roles.server";
 import { kyivDateKey, kyivNow } from "./time";
 
 type Ctx = { waitUntil(promise: Promise<unknown>): void };
@@ -306,17 +306,8 @@ async function storeImages(
   }
 }
 
-async function deciderIds(env: Env): Promise<number[]> {
-  const rows = await getDb(env)
-    .selectDistinct({ id: residents.id })
-    .from(residents)
-    .innerJoin(roleGrants, sql`${roleGrants.email} = lower(${residents.email})`)
-    .where(
-      inArray(roleGrants.role, ["council", "council_head", "site_manager"]),
-    )
-    .all();
-  return rows.map((r) => r.id);
-}
+const deciderIds = (env: Env) =>
+  idsWithRoles(env, ["council", "council_head", "site_manager"]);
 
 /** Pushes an important announcement to everyone; the cron sends the rest of the queue. */
 function broadcastImportant(
