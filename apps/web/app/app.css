@@ -1719,9 +1719,6 @@ a.day:hover {
   line-height: 1.15;
   color: var(--ink-2);
 }
-.attention {
-  margin-bottom: 12px;
-}
 .count-pill {
   display: inline-grid;
   place-items: center;

@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { AnnouncementRow, ImportantCard } from "~/components/announcement";
 import { Credit, Icon, TopBar } from "~/components/ui";
 import { agoLabel, feedSections } from "~/lib/announcements";
-import { countPending, listPublished } from "~/lib/announcements.server";
+import { listPublished } from "~/lib/announcements.server";
 import { requireProfile } from "~/lib/auth.server";
 import {
   canProposeAnnouncement,
@@ -23,10 +23,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const nowMs = Date.now();
   const today = kyivNow(nowMs).date;
   const decider = canPublishAnnouncements(me);
-  const [list, pending] = await Promise.all([
-    listPublished(env, me),
-    decider ? countPending(env) : Promise.resolve(0),
-  ]);
+  const list = await listPublished(env, me);
   const s = feedSections(list, today, nowMs);
   const ago = (ms: number | null) =>
     ms ? agoLabel(kyivDateKey(ms), today) : "";
@@ -35,7 +32,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     today,
     canPropose: canProposeAnnouncement(me),
     decider,
-    pending,
     important: s.important,
     upcoming: s.upcoming,
     fresh: s.fresh.map((a) => ({ ...a, ago: ago(a.publishedAt) })),
@@ -54,23 +50,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       <h2 className="title" style={{ marginBottom: 16 }}>
         {first ? `Привіт, ${first}` : "Привіт!"}
       </h2>
-
-      {p.decider && p.pending > 0 && (
-        <Link
-          viewTransition
-          className="glass list-row attention"
-          to="/work/announcements/review"
-        >
-          <span className="who-av">
-            <Icon name="horn" small />
-          </span>
-          <span style={{ flex: 1 }}>
-            <b>Пропозиції оголошень</b>
-            <span className="sub">Чекають вашого рішення</span>
-          </span>
-          <span className="count-pill">{p.pending}</span>
-        </Link>
-      )}
 
       <div className="ann-feed">
         {p.important.map((a) => (

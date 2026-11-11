@@ -10,6 +10,10 @@ import { requireProfile } from "~/lib/auth.server";
 import { MAX_ACTIVE, durationLabel, fmtMin } from "~/lib/booking";
 import { upcomingFor } from "~/lib/bookings.server";
 import { initials, roomLabel } from "~/lib/profile";
+import {
+  canProposeAnnouncement,
+  canPublishAnnouncements,
+} from "~/lib/permissions";
 import { ROLE_LABELS } from "~/lib/roles";
 import { dayName, kyivDateKey, kyivNow } from "~/lib/time";
 import type { Route } from "./+types/me";
@@ -32,6 +36,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     telegram: r.telegram,
     blocked: r.blocked,
     roles: r.roles.map((role) => ROLE_LABELS[role]),
+    // Those who publish post from «Праця» and never have proposals.
+    proposes: canProposeAnnouncement(r) && !canPublishAnnouncements(r),
     proposals: proposals.map((a) => ({
       id: a.id,
       title: a.title,
@@ -147,31 +153,39 @@ export default function Me({ loaderData }: Route.ComponentProps) {
         </div>
       )}
 
-      {p.proposals.length > 0 && (
+      {p.proposes && (
         <>
           <div className="section-h">
             <h3>Мої пропозиції оголошень</h3>
+            <Link to="/announcements/new">Запропонувати</Link>
           </div>
-          <div className="glass" style={{ padding: "4px 0" }}>
-            {p.proposals.map((a) => (
-              <Link
-                viewTransition
-                className="list-row"
-                to={`/announcements/${a.id}`}
-                key={a.id}
-              >
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <b>{a.title}</b>
-                  <span className="sub">
-                    {a.status === "pending"
-                      ? "Студрада ще не вирішила"
-                      : a.reason}
+          {p.proposals.length ? (
+            <div className="glass" style={{ padding: "4px 0" }}>
+              {p.proposals.map((a) => (
+                <Link
+                  viewTransition
+                  className="list-row"
+                  to={`/announcements/${a.id}`}
+                  key={a.id}
+                >
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <b>{a.title}</b>
+                    <span className="sub">
+                      {a.status === "pending"
+                        ? "Студрада ще не вирішила"
+                        : a.reason}
+                    </span>
                   </span>
-                </span>
-                <StatusPill status={a.status} />
-              </Link>
-            ))}
-          </div>
+                  <StatusPill status={a.status} />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="glass empty">
+              <b>Пропозицій немає</b>
+              Запропонувати оголошення можна в «Послугах».
+            </div>
+          )}
         </>
       )}
 
