@@ -13,9 +13,9 @@ export const meta: Route.MetaFunction = () => [
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
-  const me = await requireProfile(request, env);
+  await requireProfile(request, env);
   const today = kyivNow().date;
-  const list = await listPublished(env, me);
+  const list = await listPublished(env);
   return {
     list: list.map((a) => ({
       ...a,

@@ -117,7 +117,6 @@ describe("permissions", () => {
     const pending = {
       authorId: 1,
       status: "pending" as const,
-      audience: "all" as const,
       deletedAt: null,
     };
     const published = { ...pending, status: "published" as const };
@@ -152,12 +151,6 @@ describe("permissions", () => {
       expect(canSeeAnnouncement(other, { ...published, deletedAt: 1 })).toBe(
         false,
       );
-    });
-    it("keeps squad announcements for the squad", () => {
-      const squadOnly = { ...published, audience: "squad" as const };
-      expect(canSeeAnnouncement(other, squadOnly)).toBe(false);
-      expect(canSeeAnnouncement(squad, squadOnly)).toBe(true);
-      expect(canSeeAnnouncement(manager, squadOnly)).toBe(true);
     });
     it("lets the author edit only while under review", () => {
       expect(canEditAnnouncement(resident, pending)).toBe(true);

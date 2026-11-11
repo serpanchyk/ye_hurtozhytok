@@ -22,7 +22,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const me = await requireProfile(request, env);
   const nowMs = Date.now();
   const today = kyivNow(nowMs).date;
-  const list = await listPublished(env, me);
+  const list = await listPublished(env);
   const s = feedSections(list, today, nowMs);
   const ago = (ms: number | null) =>
     ms ? agoLabel(kyivDateKey(ms), today) : "";

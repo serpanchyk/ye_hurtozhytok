@@ -27,8 +27,6 @@ export const ANNOUNCEMENT_STATUSES = [
   "rejected",
 ] as const;
 export type AnnouncementStatus = (typeof ANNOUNCEMENT_STATUSES)[number];
-// "squad" is for the squad section that arrives with Оперета.
-export const AUDIENCES = ["all", "squad"] as const;
 // The council and the squad each keep their own task board.
 export const BOARDS = ["council", "squad"] as const;
 export type Board = (typeof BOARDS)[number];
@@ -176,7 +174,6 @@ export const announcements = sqliteTable(
     important: integer("important", { mode: "boolean" })
       .notNull()
       .default(false),
-    audience: text("audience", { enum: AUDIENCES }).notNull().default("all"),
     status: text("status", { enum: ANNOUNCEMENT_STATUSES })
       .notNull()
       .default("pending"),

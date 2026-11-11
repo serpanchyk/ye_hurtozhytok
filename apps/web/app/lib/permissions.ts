@@ -91,7 +91,6 @@ export function canRevokeRole(
 type AnnouncementRef = {
   authorId: number;
   status: "pending" | "published" | "rejected";
-  audience: "all" | "squad";
   deletedAt: number | null;
 };
 
@@ -113,13 +112,10 @@ export function canDecideAnnouncements(actor: Actor): boolean {
   return !actor.blocked && isCouncil(actor);
 }
 
-/**
- * Published ones are for everyone (squad-only ones for the squad); a proposal
- * is seen only by its author and by those who decide on it.
- */
+/** Published ones are for everyone; a proposal only for its author and those who decide on it. */
 export function canSeeAnnouncement(actor: Actor, a: AnnouncementRef): boolean {
   if (a.deletedAt !== null) return false;
-  if (a.status === "published") return a.audience === "all" || isSquad(actor);
+  if (a.status === "published") return true;
   return a.authorId === actor.id || canDecideAnnouncements(actor);
 }
 

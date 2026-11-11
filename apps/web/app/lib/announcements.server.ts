@@ -26,7 +26,6 @@ import {
   canDecideAnnouncements,
   canPublishAnnouncements,
   canSeeAnnouncement,
-  isSquad,
   type Actor,
 } from "./permissions";
 import { drainOutbox, enqueueBroadcast, notify } from "./push.server";
@@ -76,7 +75,6 @@ function card(a: Announcement, cover?: { key: string; count: number }) {
     startMin: a.startMin,
     important: a.important,
     status: a.status,
-    audience: a.audience,
     publishedAt: a.publishedAt,
     createdAt: a.createdAt,
     cover: cover?.key ?? null,
@@ -85,11 +83,8 @@ function card(a: Announcement, cover?: { key: string; count: number }) {
 }
 export type AnnouncementCard = ReturnType<typeof card>;
 
-/** Everything published that this person may read. */
-export async function listPublished(
-  env: Env,
-  actor: Actor,
-): Promise<AnnouncementCard[]> {
+/** Everything published; every resident reads the same. */
+export async function listPublished(env: Env): Promise<AnnouncementCard[]> {
   const rows = await getDb(env)
     .select()
     .from(announcements)
@@ -101,12 +96,11 @@ export async function listPublished(
     )
     .orderBy(desc(announcements.publishedAt))
     .all();
-  const visible = rows.filter((a) => a.audience === "all" || isSquad(actor));
   const covers = await coversFor(
     env,
-    visible.map((a) => a.id),
+    rows.map((a) => a.id),
   );
-  return visible.map((a) => card(a, covers.get(a.id)));
+  return rows.map((a) => card(a, covers.get(a.id)));
 }
 
 /** Proposals waiting for a decision, oldest first, with the author's name. */
