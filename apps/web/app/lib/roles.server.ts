@@ -1,7 +1,7 @@
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
 import { activity, getDb } from "./db";
-import { residents, roleGrants, type Role } from "./db/schema";
+import { PENDING_SUB, residents, roleGrants, type Role } from "./db/schema";
 import { canManageRoles, canRevokeRole, type Actor } from "./permissions";
 import { isRole, normalizeEmail, sortRoles } from "./roles";
 
@@ -53,6 +53,7 @@ export async function listPeople(env: Env): Promise<Person[]> {
     db
       .select({
         id: residents.id,
+        googleSub: residents.googleSub,
         email: residents.email,
         name: residents.name,
         firstName: residents.firstName,
@@ -79,7 +80,8 @@ export async function listPeople(env: Env): Promise<Person[]> {
     known.add(email);
     return {
       email,
-      residentId: p.id,
+      // Added ahead and not signed in yet: shown like a role given by email.
+      residentId: p.googleSub.startsWith(PENDING_SUB) ? null : p.id,
       name: p.name,
       firstName: p.firstName,
       lastName: p.lastName,

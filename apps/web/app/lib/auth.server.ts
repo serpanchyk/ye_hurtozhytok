@@ -1,8 +1,8 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { createCookieSessionStorage, redirect } from "react-router";
 
 import { activity, getDb } from "./db";
-import { residents, type Resident, type Role } from "./db/schema";
+import { PENDING_SUB, residents, type Resident, type Role } from "./db/schema";
 import { parseName, shortName, type PersonName } from "./names";
 import {
   GOOGLE_JWKS_URL,
@@ -150,6 +150,28 @@ async function upsertResident(
       .set({ email: data.email, ...names, updatedAt: now })
       .where(eq(residents.id, existing.id));
     return { ...existing, email: data.email, ...names };
+  }
+  // Added ahead under this email (moved over from Оперета): the first sign-in
+  // takes that row, with the shifts and patrols already on it.
+  const awaited = await db
+    .update(residents)
+    .set({ googleSub: data.sub, email: data.email, ...names, updatedAt: now })
+    .where(
+      and(
+        eq(residents.googleSub, `${PENDING_SUB}${data.email.toLowerCase()}`),
+        eq(residents.email, data.email.toLowerCase()),
+      ),
+    )
+    .returning()
+    .get();
+  if (awaited) {
+    await activity(db, {
+      actorId: awaited.id,
+      action: "resident.joined",
+      entity: "resident",
+      entityId: awaited.id,
+    });
+    return awaited;
   }
   const created = await db
     .insert(residents)

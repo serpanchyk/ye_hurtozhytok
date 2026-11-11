@@ -57,11 +57,16 @@ export type ComplaintTopic = (typeof COMPLAINT_TOPICS)[number];
 
 // All *_at columns hold UTC milliseconds.
 
+/** google_sub of a resident added ahead, waiting for their first sign-in. */
+export const PENDING_SUB = "pending:";
+
 export const residents = sqliteTable(
   "residents",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    // Stable Google account id ("sub"); "dev:<email>" for local development sign-in.
+    // Stable Google account id ("sub"); "dev:<email>" for local development
+    // sign-in; "pending:<email>" for someone added ahead (moved over from
+    // Оперета) who has not signed in yet: their first sign-in takes the row.
     googleSub: text("google_sub").notNull(),
     email: text("email").notNull(),
     // «Імʼя Прізвище», kept for display and sorting; the parts are below.
