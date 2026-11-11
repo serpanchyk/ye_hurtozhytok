@@ -109,6 +109,12 @@ export default function Work({ loaderData }: Route.ComponentProps) {
         {section === "squad" && (
           <>
             <LinkRow
+              to="/work/schedule"
+              icon="shield"
+              title="Графік вахт"
+              sub="Хто на вахті цього тижня, вільні вахти"
+            />
+            <LinkRow
               to="/work/board?b=squad"
               icon="board"
               title="Дошка загону"

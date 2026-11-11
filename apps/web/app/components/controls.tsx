@@ -153,6 +153,7 @@ export function DateField({
   days = 62,
   defaultValue,
   error,
+  allowNone = true,
 }: {
   name: string;
   legend: ReactNode;
@@ -160,6 +161,8 @@ export function DateField({
   days?: number;
   defaultValue: string | null;
   error?: string;
+  /** Offer «Без дати»; off where a date is required. */
+  allowNone?: boolean;
 }) {
   const list = Array.from({ length: days }, (_, i) => addDays(today, i));
   // An existing date outside the window (already past, or far ahead) stays choosable.
@@ -176,23 +179,25 @@ export function DateField({
     <fieldset className="field-row date-field">
       <legend>{legend}</legend>
       <div className="date-tiles" ref={row}>
-        <label className="day-tile none">
-          <input
-            className="control-input"
-            type="radio"
-            name={name}
-            value=""
-            defaultChecked={!defaultValue}
-            onChange={() => setValue("")}
-          />
-          <span>
-            <b>
-              Без
-              <br />
-              дати
-            </b>
-          </span>
-        </label>
+        {allowNone && (
+          <label className="day-tile none">
+            <input
+              className="control-input"
+              type="radio"
+              name={name}
+              value=""
+              defaultChecked={!defaultValue}
+              onChange={() => setValue("")}
+            />
+            <span>
+              <b>
+                Без
+                <br />
+                дати
+              </b>
+            </span>
+          </label>
+        )}
         {list.map((d) => {
           const month = MONTHS_SHORT[monthIndex(d)];
           return (

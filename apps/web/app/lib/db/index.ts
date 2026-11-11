@@ -34,7 +34,12 @@ export type ActivityAction =
   | "complaint.created"
   | "complaint.answered"
   | "complaint.rejected"
-  | "complaint.resolved";
+  | "complaint.resolved"
+  | "shift.created"
+  | "shift.edited"
+  | "shift.signed"
+  | "shift.left"
+  | "shift.deleted";
 
 export function activity(
   db: Db,
@@ -47,7 +52,8 @@ export function activity(
       | "role_grant"
       | "announcement"
       | "task"
-      | "complaint";
+      | "complaint"
+      | "shift";
     entityId: number;
     details?: Record<string, unknown>;
   },

@@ -281,6 +281,24 @@ export const complaints = sqliteTable(
   ],
 );
 
+// The squad's duty: one shift a day (none on Friday and Saturday, see
+// lib/shifts.ts); nobody on it means a free shift anyone in the squad takes.
+export const shifts = sqliteTable(
+  "shifts",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    // Kyiv calendar date "YYYY-MM-DD".
+    date: text("date").notNull(),
+    residentId: integer("resident_id").references(() => residents.id),
+    note: text("note"),
+    createdBy: integer("created_by")
+      .notNull()
+      .references(() => residents.id),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [uniqueIndex("shifts_date_idx").on(t.date)],
+);
+
 // One row per device still to be notified; the minute cron sends them in
 // small batches so a broadcast never exceeds the Worker's subrequest limit.
 export const pushOutbox = sqliteTable(
@@ -325,3 +343,4 @@ export type Machine = typeof machines.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
 export type Complaint = typeof complaints.$inferSelect;
+export type Shift = typeof shifts.$inferSelect;

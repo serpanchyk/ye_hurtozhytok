@@ -177,3 +177,34 @@ export function canSeeComplaint(
     complaint.authorId === actor.id || canHandleComplaint(actor, complaint)
   );
 }
+
+/** Leads the squad: its head and the site manager. */
+export function leadsSquad(actor: WithRoles): boolean {
+  if (actor.blocked) return false;
+  return actor.roles.includes("squad_head") || isSiteManager(actor);
+}
+
+/** Everyone in the squad stands duty. */
+export function canStandShift(person: WithRoles): boolean {
+  return isSquad(person);
+}
+
+/** Those who lead change anyone's shift; others the ones they made. */
+export function canEditShift(
+  actor: Actor,
+  shift: { createdBy: number },
+): boolean {
+  return isSquad(actor) && (leadsSquad(actor) || shift.createdBy === actor.id);
+}
+
+/** «Не зможу»: the person on duty, or someone who leads the squad. */
+export function canLeaveShift(
+  actor: Actor,
+  shift: { residentId: number | null },
+): boolean {
+  return (
+    shift.residentId !== null &&
+    isSquad(actor) &&
+    (shift.residentId === actor.id || leadsSquad(actor))
+  );
+}

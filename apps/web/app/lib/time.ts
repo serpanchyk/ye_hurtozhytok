@@ -82,6 +82,11 @@ export function weekdayIndex(dateKey: string): number {
   return (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7;
 }
 
+/** The Monday of the week the date falls in. */
+export function startOfWeek(dateKey: string): string {
+  return addDays(dateKey, -weekdayIndex(dateKey));
+}
+
 export function addDays(dateKey: string, days: number): string {
   const [y, m, d] = dateKey.split("-").map(Number);
   const date = new Date(Date.UTC(y, m - 1, d) + days * DAY);

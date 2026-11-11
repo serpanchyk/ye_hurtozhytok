@@ -1418,6 +1418,10 @@ a {
   color: var(--muted);
 }
 .pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
   min-height: 44px;
   padding: 0 14px;
   border-radius: 999px;
@@ -3818,6 +3822,23 @@ html:not(.booted) .ticket::after,
 .form:has([name="to"][value="app"]:checked) .topic-group:not([data-to="app"]),
 .form:has([name="to"][value="app"]:checked) .place-field {
   display: none;
+}
+
+/* ---------- the squad's week of shifts ---------- */
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 4px 0 6px;
+}
+.week-nav b {
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+.list-row form {
+  display: flex;
 }
 
 /* ---------- task boards ---------- */
