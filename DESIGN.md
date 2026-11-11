@@ -297,7 +297,7 @@ Tactile capsules that compress slightly when pressed.
 
 ### Statuses and Progress
 
-- **In the app today:** a proposed announcement shows «На розгляді» as the amber ring pill and a rejected one «Відхилено» as a neutral outline; the deciders' queue count is an amber pill. The board and complaints below are still mockup-only.
+- **In the app today:** cards and complaints follow the Four Signals: «Нові / Надіслано» on ink 7%, «В роботі» amber on amber 16%, «Готово / Вирішено» slate with a white check; a proposed announcement shows «На розгляді» as the amber ring, «Відхилено» a neutral outline. The deciders' queue count is an amber pill. The progress track, the complaint card and the anonymous plate below are still mockup-only.
 
 - **Status pill:** one capsule shape, five states. «Нове / Надіслано» on ink 7%; «На розгляді» as an amber ring with a hollow dot; «В роботі» amber on amber 16%; «Готово / Вирішено» slate with a white check; «Відхилено» a neutral outline, never red.
 - **Progress track:** steps joined by a 2px line; done steps slate with a check, the current step an amber dot whose ring breathes (stops under reduced motion), later steps hollow. The same track sits on a public task and inside the resident's own complaint card.

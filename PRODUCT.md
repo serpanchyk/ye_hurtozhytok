@@ -12,15 +12,15 @@ React Router v7 (framework mode) on a Cloudflare Worker, D1, Drizzle, Tailwind C
 
 ## Users
 
-Residents of dormitory №14, several hundred students, Ukrainian-speaking. They open the app on their phones, usually in a hallway, in their room, or standing next to a washing machine, often one-handed and in a hurry. Their job in v1: find a free time on one of three washing machines, book it, get reminded, and cancel or free it early when plans change.
+Residents of dormitory №14, several hundred students, Ukrainian-speaking. They open the app on their phones, usually in a hallway, in their room, or standing next to a washing machine, often one-handed and in a hurry. Their main job: find a free time on one of three washing machines, book it, get reminded, and cancel or free it early when plans change. They also read and propose announcements, follow the public task boards and write complaints.
 
-Secondary: members of the student council, who can cancel any booking and block people.
+Secondary: people with roles, working in their own sections on «Послуги». The student council cancels any booking, keeps its task board and decides on proposed announcements; the patrol squad (оперзагін) keeps its duty shifts, patrols and board; the site manager can do all of that, hands out roles and is the only one who blocks people.
 
 ## Product Purpose
 
 Replace two paper notebooks (an append-only queue of name, room and Telegram nick) with booking a specific machine for a specific time. Success: residents stop writing in the notebooks because the app is faster and they know in advance when they will wash, without watching a queue.
 
-Later modules: announcements, a transparent student-council task board, online payment for laundry.
+Beyond laundry the app already has announcements, task boards of the student council and the squad, complaints, and the squad's duty shifts and patrols moved over from Оперета with its Telegram bot. Later: online payment for laundry.
 
 ## Positioning
 

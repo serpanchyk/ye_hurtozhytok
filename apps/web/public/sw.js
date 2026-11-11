@@ -4,8 +4,8 @@ const CACHE = "eh-v7";
 
 // The home page with announcements, announcements themselves, «Послуги» (the
 // way to the laundry), the laundry page and machine pages are kept for
-// offline reading; «Моє», profile,
-// bookings, forms, the review queue, council and roles are never cached.
+// offline reading; «Моє», profile, bookings, forms, complaints, the board,
+// «Мешканці» and the work pages (/work/*) are never cached.
 // Logout clears everything. React Router fetches page data from
 // "<path>.data" ("/_root.data" for "/"), so data requests follow the same rule.
 const pagePath = (path) =>

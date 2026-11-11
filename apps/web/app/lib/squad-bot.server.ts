@@ -47,7 +47,7 @@ import { addDays, kyivDateKey, kyivMinute, weekdayIndex } from "./time";
 
 /**
  * The squad's news in its Telegram group. Every change already writes an
- * activity_log entry, so the bot reads the log once a minute and posts what
+ * activity_log entry, so the bot reads the log every two minutes and posts what
  * concerns the squad; nothing has to remember to notify it. At 09:00 it sends
  * the morning summary, at 18:00 the free-shift reminder, on Sundays also the
  * coming week and who has sat how many shifts.

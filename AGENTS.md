@@ -3,10 +3,12 @@
 ## Project Purpose
 
 єГуртожиток is a web app for the residents of dormitory №14, used mostly from
-phones as an installed PWA. Version 1 does one thing: book a washing machine
-for a specific time instead of writing into paper notebooks. Three machines:
-one on the 4th floor, two on the 6th (№1 and №2). Later: announcements, a
-transparent student-council task board, online payment for laundry.
+phones as an installed PWA. Its core is booking a washing machine for a
+specific time instead of writing into paper notebooks. Three machines: one on
+the 4th floor, two on the 6th (№1 and №2). It also has announcements, task
+boards of the student council and the squad (оперзагін), complaints, the
+squad's duty shifts and patrols moved over from Оперета, and a Telegram bot
+for the squad's group. Later: online payment for laundry.
 
 Residents sign in with their Lviv Polytechnic Google account (@lpnu.ua); there is
 no approval step.
@@ -59,13 +61,16 @@ docs in the same change.
   action re-checks permissions on the server.
 - Two worlds: public screens only show (plus a resident's own actions such as
   booking, proposing an announcement, writing a complaint); everything staff
-  change lives under `/work`, one tile per role on «Послуги» («Студрада»,
-  «Оперзагін», «Управа», from `WORK_SECTIONS`). Both are built from the same
-  components with different data and buttons.
+  change lives under `/work`, one tile per role on «Послуги» under the heading
+  «Праця» («Студрада», «Оперзагін» and the site manager's «Управа», from
+  `WORK_SECTIONS`). Both are built from the same components with different
+  data and buttons.
 - Reuse before writing: an existing component, CSS class or animation is used
   or extracted, never copied. The bottom menu comes from `app/lib/sections.ts`
   and does not grow; new services go to «Послуги».
 - Write an `activity_log` entry for every change people make.
+- D1 binds at most 100 values a query: pass long id lists through `inSlices`
+  (`app/lib/db/index.ts`) or use a subquery.
 - Forms must work without JavaScript (React Router `<Form>`); JavaScript only
   enhances them. Offline mode is read-only.
 - The service worker caches only `/`, `/announcements`, `/announcements/:id`,
@@ -74,8 +79,9 @@ docs in the same change.
   Bump `CACHE` in `public/sw.js` when caching rules change.
 - Reminders to residents are Web Push only; email needs an own domain and is
   not built. The squad's Telegram group gets its news from the bot, which reads
-  `activity_log` every minute (`lib/squad-bot.server.ts`); a change needs no
-  extra call to reach it, only its activity entry.
+  `activity_log` every two minutes on its own cron trigger
+  (`lib/squad-bot.server.ts`); a change needs no extra call to reach it, only
+  its activity entry.
 
 ## Testing And Checks
 
@@ -88,4 +94,5 @@ docs in the same change.
 
 - Commit after every completed change with a Conventional Commit message.
 - Run `npm run format:write` before committing.
-- Never commit `.dev.vars` or Cloudflare / Google OAuth / VAPID secrets.
+- Never commit `.dev.vars` or Cloudflare / Google OAuth / VAPID / Telegram bot
+  secrets.
