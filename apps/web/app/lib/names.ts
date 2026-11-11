@@ -59,3 +59,11 @@ export function shortName(p: PersonName): string {
 export function fullName(p: PersonName): string {
   return [p.lastName, p.firstName, p.patronymic].filter(Boolean).join(" ");
 }
+
+/**
+ * By name in Ukrainian alphabetical order. The database compares letters by
+ * their codes, which puts «Ігор» before «Анастасія», so people are sorted here.
+ */
+export function byName(a: { name: string }, b: { name: string }): number {
+  return a.name.localeCompare(b.name, "uk");
+}

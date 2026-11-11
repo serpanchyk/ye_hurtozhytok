@@ -96,14 +96,17 @@ export function Check({
 }
 
 /**
- * One choice out of a few, as capsules. "mine" marks the person's own
- * current choice in ultramarine; "ink" is for filters and settings.
+ * One choice out of a few (or several, with `multiple`), as capsules. "mine"
+ * marks the person's own current choice in ultramarine; "ink" is for
+ * filters and settings.
  */
 export function ChoiceChips({
   name,
   legend,
   options,
   defaultValue,
+  multiple = false,
+  defaultValues = [],
   tone = "ink",
   columns,
   hideLegend,
@@ -112,6 +115,9 @@ export function ChoiceChips({
   legend: string;
   options: { value: string; label: string }[];
   defaultValue?: string;
+  /** Several may be picked (checkboxes); then `defaultValues`. */
+  multiple?: boolean;
+  defaultValues?: readonly string[];
   tone?: "ink" | "mine";
   columns?: number;
   hideLegend?: boolean;
@@ -132,10 +138,14 @@ export function ChoiceChips({
           <label key={o.value} className="choice-chip">
             <input
               className="control-input"
-              type="radio"
+              type={multiple ? "checkbox" : "radio"}
               name={name}
               value={o.value}
-              defaultChecked={o.value === defaultValue}
+              defaultChecked={
+                multiple
+                  ? defaultValues.includes(o.value)
+                  : o.value === defaultValue
+              }
             />
             <span>{o.label}</span>
           </label>

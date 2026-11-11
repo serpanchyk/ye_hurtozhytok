@@ -2471,6 +2471,28 @@ input[type="search"]::-webkit-search-decoration {
     background 0.2s var(--ease),
     color 0.2s var(--ease);
 }
+/* A grid of choices (people two a row, as in Оперета) uses compact tiles:
+   smaller type, rounded corners instead of a capsule, and a long name wraps
+   instead of spilling out. Tiles in one row share a height. */
+.choice-chips[data-grid] {
+  gap: 6px;
+}
+.choice-chips[data-grid] .choice-chip {
+  display: grid;
+}
+.choice-chips[data-grid] .choice-chip span {
+  min-height: 40px;
+  padding: 5px 8px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+}
+.choice-chips[data-grid] .control-input:checked + span {
+  font-weight: 600;
+}
 .choice-chip:hover span {
   background: #fff;
 }

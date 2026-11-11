@@ -55,21 +55,15 @@ export function PatrolForm({
         allowNone={false}
         error={errors?.date}
       />
-      <fieldset className="choice">
-        <legend>Хто</legend>
-        {people.map((p) => (
-          <Check
-            key={p.id}
-            name="people"
-            value={String(p.id)}
-            defaultChecked={initial.people.includes(p.id)}
-            title={p.name}
-          />
-        ))}
-        {errors?.people && (
-          <small className="field-error">{errors.people}</small>
-        )}
-      </fieldset>
+      <ChoiceChips
+        name="people"
+        legend="Хто"
+        multiple
+        columns={2}
+        defaultValues={initial.people.map(String)}
+        options={people.map((p) => ({ value: String(p.id), label: p.name }))}
+      />
+      {errors?.people && <small className="field-error">{errors.people}</small>}
       <FormField id="notes" label="Що помітили" optional error={errors?.notes}>
         <textarea
           id="notes"

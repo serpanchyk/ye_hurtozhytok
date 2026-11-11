@@ -1,7 +1,8 @@
-import { asc, eq, inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import type { Db } from "./db";
 import { residents, taskAssignees } from "./db/schema";
+import { byName } from "./names";
 
 type Person = { id: number; name: string };
 
@@ -21,8 +22,8 @@ export async function assigneesOf(
     .from(taskAssignees)
     .innerJoin(residents, eq(residents.id, taskAssignees.residentId))
     .where(inArray(taskAssignees.taskId, taskIds))
-    .orderBy(asc(residents.name))
     .all();
   for (const { taskId, ...person } of rows) result.get(taskId)?.push(person);
+  for (const people of result.values()) people.sort(byName);
   return result;
 }

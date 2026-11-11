@@ -8,6 +8,7 @@ import {
   taskTitleFromNotes,
   type PatrolErrors,
 } from "./patrols";
+import { byName } from "./names";
 import { squadPeople } from "./shifts.server";
 import { addDays } from "./time";
 
@@ -33,9 +34,9 @@ export async function weekPatrols(env: Env, actor: Actor, monday: string) {
             rows.map((p) => p.id),
           ),
         )
-        .orderBy(asc(residents.name))
         .all()
     : [];
+  people.sort(byName);
   return rows.map((p) => ({
     id: p.id,
     date: p.date,

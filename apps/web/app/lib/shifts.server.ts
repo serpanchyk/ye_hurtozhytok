@@ -20,6 +20,7 @@ import {
   leadsSquad,
   type Actor,
 } from "./permissions";
+import { byName } from "./names";
 import { idsWithRoles } from "./roles.server";
 import {
   NO_DUTY_MESSAGE,
@@ -34,7 +35,7 @@ import { addDays } from "./time";
 export async function squadPeople(env: Env) {
   const ids = await idsWithRoles(env, ["squad", "squad_head", "site_manager"]);
   if (ids.length === 0) return [];
-  return getDb(env)
+  const people = await getDb(env)
     .select({
       id: residents.id,
       name: residents.name,
@@ -42,8 +43,8 @@ export async function squadPeople(env: Env) {
     })
     .from(residents)
     .where(and(inArray(residents.id, ids), eq(residents.blocked, false)))
-    .orderBy(asc(residents.name))
     .all();
+  return people.sort(byName);
 }
 
 /** The week from its Monday: each day, whether it has duty and its shift. */
