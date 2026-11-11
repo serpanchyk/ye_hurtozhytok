@@ -60,7 +60,7 @@ function AnnouncementRows({ pending }: { pending: number }) {
 function ResidentsRow() {
   return (
     <LinkRow
-      to="/residents"
+      to="/work/residents"
       icon="user"
       title="Мешканці"
       sub="Хто зареєструвався й де живе"
@@ -129,7 +129,7 @@ export default function Work({ loaderData }: Route.ComponentProps) {
           <>
             <AnnouncementRows pending={pending} />
             <LinkRow
-              to="/residents"
+              to="/work/residents"
               icon="shield"
               title="Мешканці й ролі"
               sub="Видати й зняти ролі, заблокувати"
@@ -155,7 +155,7 @@ export default function Work({ loaderData }: Route.ComponentProps) {
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <b>Завантажити Excel</b>
                   <span className="sub">
-                    Вахти, обходи, завдання, загін і журнал змін
+                    Вахти, обходи, картки, загін і журнал змін
                   </span>
                 </span>
               </a>

@@ -60,7 +60,12 @@ function Tile({
       <span className="who-av">
         <Icon name={icon} small />
       </span>
-      {count ? <span className="count-pill">{count}</span> : null}
+      {count ? (
+        <span className="count-pill">
+          {count}
+          <span className="sr-only">, чекають</span>
+        </span>
+      ) : null}
       <b>{title}</b>
     </Link>
   );

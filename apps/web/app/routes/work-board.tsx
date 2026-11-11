@@ -67,22 +67,47 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 /** Cards being moved right now, by id: the board shows them in place at once. */
 function useMoving() {
   const moving = new Map<number, TaskStatus>();
-  let error: string | null = null;
   for (const f of useFetchers()) {
     if (!f.key.startsWith("task-move-")) continue;
-    const id = Number(f.key.slice("task-move-".length));
     const status = f.formData?.get("status");
-    if (f.state !== "idle" && isTaskStatus(status)) moving.set(id, status);
-    if (f.state === "idle" && f.data?.error) error = f.data.error;
+    if (isTaskStatus(status))
+      moving.set(Number(f.key.slice("task-move-".length)), status);
   }
-  return { moving, error };
+  return moving;
+}
+
+/**
+ * Whether a move did not stick. Finished fetchers leave the list, so instead
+ * of their answer the board checks where the card stands once fresh data is in.
+ */
+function useFailedMove(
+  moving: Map<number, TaskStatus>,
+  cards: readonly { id: number; status: TaskStatus }[],
+) {
+  const dropped = useRef(new Map<number, TaskStatus>());
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    for (const [id, to] of dropped.current) {
+      if (moving.has(id)) continue;
+      dropped.current.delete(id);
+      if (cards.find((c) => c.id === id)?.status !== to) setFailed(true);
+    }
+  });
+  return {
+    failed,
+    dropped: (id: number, to: TaskStatus) => {
+      dropped.current.set(id, to);
+      setFailed(false);
+    },
+  };
 }
 
 /** The working board in the work pages: every card, private ones too, to change and drag. */
 export default function WorkBoard({ loaderData }: Route.ComponentProps) {
   usePolling(30_000);
   const { me, boards, board, filter, moved } = loaderData;
-  const { moving, error } = useMoving();
+  const moving = useMoving();
+  const { failed, dropped } = useFailedMove(moving, loaderData.cards);
   const submit = useSubmit();
   const cols = columns(
     loaderData.cards.map((c) => ({
@@ -107,6 +132,7 @@ export default function WorkBoard({ loaderData }: Route.ComponentProps) {
     onDrop: (id, to) => {
       if (!isTaskStatus(to)) return;
       setLanded(id);
+      dropped(id, to);
       submit(
         { intent: "status", status: to },
         {
@@ -143,9 +169,10 @@ export default function WorkBoard({ loaderData }: Route.ComponentProps) {
           Картку передано {BOARD_DATIVE[moved]}.
         </p>
       )}
-      {error && (
+      {failed && (
         <p className="error-note" role="alert">
-          {error}
+          Картку не вдалося перемістити: можливо, її вже змінили. Дошку
+          оновлено.
         </p>
       )}
 

@@ -58,6 +58,7 @@ export function newCardMessage(
     title: string;
     place: string | null;
     details: string | null;
+    status: TaskStatus;
     /** Null for a resident's complaint: their name stays in the app. */
     authorName: string | null;
     origin: "board" | "complaint" | "patrol" | "council";
@@ -73,7 +74,11 @@ export function newCardMessage(
   if (card.details && card.origin !== "patrol")
     lines.push(escapeHtml(clip(card.details)));
   if (card.place) lines.push(`Де: ${escapeHtml(card.place)}`);
-  lines.push("Виконавця ще немає — можна взяти собі.");
+  lines.push(
+    card.status === "new"
+      ? "Виконавця ще немає — можна взяти собі."
+      : `Стан: ${STATUS_WORDS[card.status]}`,
+  );
   if (card.authorName)
     lines.push(
       `${card.origin === "council" ? "Передав(ла)" : "Додав(ла)"}: ${escapeHtml(card.authorName)}`,

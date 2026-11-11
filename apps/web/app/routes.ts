@@ -42,6 +42,7 @@ export default [
     route("work/patrols/new", "routes/work-patrol-new.tsx"),
     route("work/patrols/:id/edit", "routes/work-patrol-edit.tsx"),
     route("work/complaints", "routes/work-complaints.tsx"),
+    route("work/residents", "routes/residents.tsx"),
     route("work/telegram", "routes/work-telegram.tsx"),
     route("work/complaints/:id", "routes/work-complaint.tsx"),
     route("work/announcements/new", "routes/announcement-new.tsx", {
@@ -62,6 +63,6 @@ export default [
     route("announcements/review", "routes/moved.tsx", {
       id: "moved-review",
     }),
-    route("residents", "routes/residents.tsx"),
+    route("residents", "routes/moved.tsx", { id: "moved-residents" }),
   ]),
 ] satisfies RouteConfig;

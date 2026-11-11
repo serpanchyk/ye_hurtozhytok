@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fullName, parseName, shortName } from "./names";
+import { byName, fullName, parseName, shortName } from "./names";
 
 describe("parseName", () => {
   it("splits the university's «Прізвище Імʼя По батькові»", () => {
@@ -43,5 +43,20 @@ describe("parseName", () => {
       lastName: "Melnyk",
       patronymic: null,
     });
+  });
+});
+
+describe("sorting people", () => {
+  it("follows the Ukrainian alphabet, not letter codes", () => {
+    const names = ["Ігор", "Анастасія", "Євген", "Ґанна", "Гліб"].map(
+      (name) => ({ name }),
+    );
+    expect(names.sort(byName).map((p) => p.name)).toEqual([
+      "Анастасія",
+      "Гліб",
+      "Ґанна",
+      "Євген",
+      "Ігор",
+    ]);
   });
 });

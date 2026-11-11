@@ -9,13 +9,22 @@ import { runSquadBot } from "./squad-bot.server";
 import { addDays, dateLong, kyivDateKey } from "./time";
 
 /**
- * Runs every minute: the squad's Telegram news, booking reminders, then the
- * next batch of queued messages.
+ * The squad's Telegram bot has a trigger of its own (wrangler.jsonc), so its
+ * posts never eat the request budget of reminders and queued pushes.
  */
-export async function runEveryMinute(env: Env, scheduledTime: number) {
-  await runSquadBot(env, scheduledTime).catch((error) =>
-    console.error("squad bot failed", error),
-  );
+export const SQUAD_BOT_CRON = "*/2 * * * *";
+
+export async function runScheduled(
+  env: Env,
+  cron: string,
+  scheduledTime: number,
+) {
+  if (cron === SQUAD_BOT_CRON) await runSquadBot(env, scheduledTime);
+  else await runEveryMinute(env, scheduledTime);
+}
+
+/** Runs every minute: booking reminders, then the next batch of queued messages. */
+async function runEveryMinute(env: Env, scheduledTime: number) {
   if (!pushEnabled(env)) return;
   try {
     await sendReminders(env, scheduledTime);

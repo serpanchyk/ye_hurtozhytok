@@ -32,8 +32,23 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export async function action({ request, context }: Route.ActionArgs) {
   const { env, ctx } = context.cloudflare;
   const me = await requireProfile(request, env);
-  const result = await createComplaint(env, ctx, me, await request.formData());
-  if (!result.ok) return data({ errors: result.errors }, { status: 400 });
+  const form = await request.formData();
+  const result = await createComplaint(env, ctx, me, form);
+  // What was typed comes back, so a page without JavaScript keeps it too.
+  const typed = (name: string) => String(form.get(name) ?? "");
+  if (!result.ok)
+    return data(
+      {
+        errors: result.errors,
+        values: {
+          to: typed("to"),
+          topic: typed("topic"),
+          place: typed("place"),
+          body: typed("body"),
+        },
+      },
+      { status: 400 },
+    );
   throw redirect(`/complaints/${result.id}?sent=1`);
 }
 
@@ -44,8 +59,11 @@ export async function action({ request, context }: Route.ActionArgs) {
  */
 export default function NewComplaint({ actionData }: Route.ComponentProps) {
   const errors = actionData?.errors;
+  const typed = actionData?.values;
   const busy = useNavigation().state === "submitting";
-  const [to, setTo] = useState<Recipient>("council");
+  const [to, setTo] = useState<Recipient>(
+    RECIPIENTS.find((r) => r.id === typed?.to)?.id ?? "council",
+  );
   // The gliding pill takes over once the page is live; before that the
   // checked radio highlights itself.
   const [live, setLive] = useState(false);
@@ -78,16 +96,19 @@ export default function NewComplaint({ actionData }: Route.ComponentProps) {
                   type="radio"
                   name="to"
                   value={r.id}
-                  defaultChecked={r.id === "council"}
+                  defaultChecked={r.id === to}
                   onChange={() => choose(r.id)}
                 />
                 {r.label}
               </label>
             ))}
           </PillGroup>
-          <small className="choice-hint">
-            {RECIPIENTS.find((r) => r.id === to)?.hint}
-          </small>
+          {/* Every hint is there; CSS shows the chosen one, with or without JavaScript. */}
+          {RECIPIENTS.map((r) => (
+            <small className="choice-hint" data-to={r.id} key={r.id}>
+              {r.hint}
+            </small>
+          ))}
         </fieldset>
 
         {RECIPIENTS.map((r) => (
@@ -96,6 +117,7 @@ export default function NewComplaint({ actionData }: Route.ComponentProps) {
               name="topic"
               legend={`Що сталося · ${r.label}`}
               columns={2}
+              defaultValue={typed?.topic}
               options={TOPICS_FOR[r.id].map((t) => ({
                 value: t,
                 label: TOPIC_LABELS[t],
@@ -112,6 +134,7 @@ export default function NewComplaint({ actionData }: Route.ComponentProps) {
               id="place"
               name="place"
               maxLength={PLACE_MAX}
+              defaultValue={typed?.place}
               placeholder="5 поверх, кухня"
             />
           </FormField>
@@ -123,6 +146,7 @@ export default function NewComplaint({ actionData }: Route.ComponentProps) {
             className="area"
             rows={5}
             maxLength={BODY_MAX}
+            defaultValue={typed?.body}
             required
             aria-describedby={errors?.body ? "body-error" : undefined}
           />

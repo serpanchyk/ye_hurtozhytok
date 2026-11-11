@@ -13,6 +13,8 @@ type Initial = {
   details: string | null;
   place: string | null;
   public: boolean;
+  /** The board the card was on when the form opened (editing only). */
+  board?: string;
 };
 
 const described = (id: string, error?: string, hint?: boolean) =>
@@ -23,14 +25,20 @@ export function TaskForm({
   initial,
   errors,
   submitLabel,
+  complaint = false,
 }: {
   initial: Initial;
   errors?: TaskErrors;
   submitLabel: string;
+  /** A complaint's card is always private, so it has no switch. */
+  complaint?: boolean;
 }) {
   const busy = useNavigation().state === "submitting";
   return (
     <Form method="post" className="glass form">
+      {initial.board && (
+        <input type="hidden" name="board" value={initial.board} />
+      )}
       <FormField id="title" label="Що зробити" error={errors?.title}>
         <input
           id="title"
@@ -72,12 +80,14 @@ export function TaskForm({
           aria-describedby={described("details", errors?.details, true)}
         />
       </FormField>
-      <Check
-        name="public"
-        defaultChecked={initial.public}
-        title="Публічна"
-        hint="Назву, місце, стан і виконавців побачать усі мешканці. Подробиці — лише ви."
-      />
+      {!complaint && (
+        <Check
+          name="public"
+          defaultChecked={initial.public}
+          title="Публічна"
+          hint="Назву, місце, стан і виконавців побачать усі мешканці. Подробиці — лише ті, хто веде дошку."
+        />
+      )}
       <button className="btn btn-primary block" type="submit" disabled={busy}>
         {submitLabel}
       </button>

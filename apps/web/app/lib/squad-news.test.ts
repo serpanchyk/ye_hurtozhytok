@@ -25,6 +25,7 @@ describe("cards", () => {
       title: "Замок <пральня>",
       details: "Ключ прокручується",
       place: "Підвал",
+      status: "new",
       authorName: "Софія",
       origin: "board",
     });
@@ -41,6 +42,7 @@ describe("cards", () => {
       title: "Шум · 512",
       details: null,
       place: "512",
+      status: "new",
       authorName: null,
       origin: "complaint",
     });
@@ -54,10 +56,12 @@ describe("cards", () => {
       title: "Двері",
       details: null,
       place: null,
+      status: "done",
       authorName: "Олена",
       origin: "council",
     });
     expect(text).toContain("Студрада передала картку");
+    expect(text).toContain("Стан: готово");
     expect(text).toContain("Передав(ла): Олена");
   });
 

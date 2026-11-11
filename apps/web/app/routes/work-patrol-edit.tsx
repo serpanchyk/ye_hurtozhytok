@@ -5,7 +5,7 @@ import { PatrolForm } from "~/components/patrol-form";
 import { Credit, TopBar } from "~/components/ui";
 import { requireProfile } from "~/lib/auth.server";
 import { deletePatrol, getPatrol, updatePatrol } from "~/lib/patrols.server";
-import { squadPeople } from "~/lib/shifts.server";
+import { squadPeopleWith } from "~/lib/shifts.server";
 import { kyivNow, startOfWeek } from "~/lib/time";
 import type { Route } from "./+types/work-patrol-edit";
 
@@ -23,7 +23,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   if (!p) throw new Response(NOT_YOURS, { status: 403 });
   return {
     today: kyivNow().date,
-    people: await squadPeople(env),
+    people: await squadPeopleWith(env, p.people),
     initial: {
       date: p.date,
       status: p.status,

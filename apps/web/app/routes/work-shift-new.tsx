@@ -20,9 +20,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const today = kyivNow().date;
   const asked = new URL(request.url).searchParams.get("date");
   const canSelf = canStandShift(me);
+  const date = nextDutyDate(isDateKey(asked) && asked >= today ? asked : today);
   return {
     today,
-    date: nextDutyDate(isDateKey(asked) && asked >= today ? asked : today),
+    date,
+    back: `/work/schedule?w=${startOfWeek(isDateKey(asked) ? asked : today)}`,
     canSelf,
     who: canSelf ? "me" : "free",
     people: leadsSquad(me)
@@ -47,7 +49,7 @@ export default function NewShift({
   const { today, date, canSelf, who, people } = loaderData;
   return (
     <>
-      <TopBar back="/work/schedule" title="Нова вахта" />
+      <TopBar back={loaderData.back} title="Нова вахта" />
       <ShiftForm
         today={today}
         date={date}

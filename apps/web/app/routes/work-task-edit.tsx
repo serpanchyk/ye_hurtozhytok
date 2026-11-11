@@ -3,6 +3,7 @@ import { data, redirect } from "react-router";
 import { TaskForm } from "~/components/task-form";
 import { Credit, TopBar } from "~/components/ui";
 import { requireProfile } from "~/lib/auth.server";
+import { isComplaintCard } from "~/lib/complaints.server";
 import { getTask, updateTask } from "~/lib/tasks.server";
 import type { Route } from "./+types/work-task-edit";
 
@@ -21,11 +22,13 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const t = found.task;
   return {
     id: t.id,
+    complaint: await isComplaintCard(env, t.id),
     initial: {
       title: t.title,
       details: t.details,
       place: t.place,
       public: t.public,
+      board: t.board,
     },
   };
 }
@@ -51,6 +54,7 @@ export default function EditTask({
         initial={loaderData.initial}
         errors={actionData?.errors}
         submitLabel="Зберегти"
+        complaint={loaderData.complaint}
       />
       <Credit />
     </>

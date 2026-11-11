@@ -63,12 +63,10 @@ export type PatrolResult =
   | { ok: true; date: string; taskId: number | null }
   | { ok: false; errors: PatrolErrors };
 
-async function parse(env: Env, form: FormData) {
+/** Who went: the squad now, plus whoever the patrol already names (`keep`). */
+async function parse(env: Env, form: FormData, keep: readonly number[] = []) {
   const people = await squadPeople(env);
-  return parsePatrolForm(
-    form,
-    people.map((p) => p.id),
-  );
+  return parsePatrolForm(form, [...people.map((p) => p.id), ...keep]);
 }
 
 /**
@@ -144,18 +142,18 @@ export async function updatePatrol(
 ): Promise<PatrolResult | null> {
   const p = await getPatrol(env, actor, id);
   if (!p) return null;
-  const parsed = await parse(env, form);
+  const parsed = await parse(env, form, p.people);
   if (!parsed.ok) return parsed;
   const { date, status, notes, people } = parsed.values;
   const db = getDb(env);
-  await db
-    .update(patrols)
-    .set({ date, status, notes })
-    .where(eq(patrols.id, id));
-  await db.delete(patrolMembers).where(eq(patrolMembers.patrolId, id));
-  await db
-    .insert(patrolMembers)
-    .values(people.map((residentId) => ({ patrolId: id, residentId })));
+  // One batch: a patrol is never left without the people who went.
+  await db.batch([
+    db.update(patrols).set({ date, status, notes }).where(eq(patrols.id, id)),
+    db.delete(patrolMembers).where(eq(patrolMembers.patrolId, id)),
+    db
+      .insert(patrolMembers)
+      .values(people.map((residentId) => ({ patrolId: id, residentId }))),
+  ]);
   await activity(db, {
     actorId: actor.id,
     action: "patrol.edited",

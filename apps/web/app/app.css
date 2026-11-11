@@ -195,19 +195,6 @@ button {
   font-size: 19px;
   letter-spacing: -0.035em;
 }
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--glass-strong);
-  box-shadow: var(--shadow-gloss);
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--ink-2);
-  border: 0;
-}
 .icon-btn {
   width: 44px;
   height: 44px;
@@ -1408,6 +1395,7 @@ a {
 }
 .list-row b {
   display: block;
+  overflow-wrap: anywhere;
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -1931,6 +1919,7 @@ body:has(.viewer:not(.live) :target) .tabbar {
 }
 .ann-detail h2 {
   margin: 0;
+  overflow-wrap: anywhere;
   font-size: 24px;
   line-height: 1.15;
   letter-spacing: -0.03em;
@@ -2131,6 +2120,7 @@ body:has(.viewer:not(.live) :target) .tabbar {
 }
 .reason p {
   margin: 4px 0;
+  overflow-wrap: anywhere;
   font-size: 14.5px;
   white-space: pre-line;
 }
@@ -3838,10 +3828,11 @@ html:not(.booted) .ticket::after,
   outline-offset: 2px;
 }
 .form:has([name="to"][value="council"]:checked)
-  .topic-group:not([data-to="council"]),
+  :is(.topic-group, .choice-hint):not([data-to="council"]),
 .form:has([name="to"][value="squad"]:checked)
-  .topic-group:not([data-to="squad"]),
-.form:has([name="to"][value="app"]:checked) .topic-group:not([data-to="app"]),
+  :is(.topic-group, .choice-hint):not([data-to="squad"]),
+.form:has([name="to"][value="app"]:checked)
+  :is(.topic-group, .choice-hint):not([data-to="app"]),
 .form:has([name="to"][value="app"]:checked) .place-field {
   display: none;
 }

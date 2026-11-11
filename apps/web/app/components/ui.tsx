@@ -259,7 +259,12 @@ export function LinkRow({
         <b>{title}</b>
         <span className="sub">{sub}</span>
       </span>
-      {count ? <span className="count-pill">{count}</span> : null}
+      {count ? (
+        <span className="count-pill">
+          {count}
+          <span className="sr-only">, чекають</span>
+        </span>
+      ) : null}
       <Icon name="chev" small />
     </Link>
   );

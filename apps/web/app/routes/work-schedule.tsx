@@ -1,5 +1,6 @@
 import { Form, Link, data, redirect, useNavigation } from "react-router";
 
+import { ConfirmButton } from "~/components/controls";
 import { Credit, Icon, TopBar } from "~/components/ui";
 import { requireProfile } from "~/lib/auth.server";
 import { isSquad } from "~/lib/permissions";
@@ -66,7 +67,9 @@ export default function Schedule({
   actionData,
 }: Route.ComponentProps) {
   usePolling(30_000);
-  const { prev, next, thisWeek, range, days } = loaderData;
+  const { monday, prev, next, thisWeek, range, days } = loaderData;
+  // Adding from another week starts on that week and comes back to it.
+  const week = thisWeek ? "" : `?date=${monday}`;
   const busy = useNavigation().state === "submitting";
   return (
     <>
@@ -157,14 +160,29 @@ export default function Schedule({
                   {d.shift?.canLeave && (
                     <Form method="post" preventScrollReset>
                       <input type="hidden" name="shift" value={d.shift.id} />
-                      <button
-                        className="pill-btn"
-                        name="intent"
-                        value="leave"
-                        disabled={busy}
-                      >
-                        Не зможу
-                      </button>
+                      {d.shift.mine ? (
+                        <button
+                          className="pill-btn"
+                          name="intent"
+                          value="leave"
+                          disabled={busy}
+                        >
+                          Не зможу
+                        </button>
+                      ) : (
+                        // Taking someone else off asks first, like cancelling a booking.
+                        <ConfirmButton
+                          variant="arm"
+                          className="pill-btn danger"
+                          name="intent"
+                          value="leave"
+                          label={`Зняти з вахти: ${d.shift.name}, ${d.label}`}
+                          question={`Зняти з вахти: ${d.shift.name}?`}
+                          yes="Точно?"
+                        >
+                          Зняти
+                        </ConfirmButton>
+                      )}
                     </Form>
                   )}
                   {d.shift?.canEdit && (
@@ -215,7 +233,7 @@ export default function Schedule({
         <Link
           viewTransition
           className="btn btn-soft block"
-          to="/work/shifts/new"
+          to={`/work/shifts/new${week}`}
         >
           <Icon name="plus" />
           Нова вахта
@@ -223,7 +241,7 @@ export default function Schedule({
         <Link
           viewTransition
           className="btn btn-soft block"
-          to="/work/patrols/new"
+          to={`/work/patrols/new${week}`}
         >
           <Icon name="walk" />
           Обхід

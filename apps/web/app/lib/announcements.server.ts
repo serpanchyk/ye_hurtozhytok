@@ -11,7 +11,7 @@ import {
   whenLabel,
   type AnnouncementErrors,
 } from "./announcements";
-import { activity, getDb } from "./db";
+import { activity, getDb, inSlices } from "./db";
 import { detectImageType, stripMetadata, type ImageType } from "./images";
 import { markdownExcerpt, renderMarkdown } from "./markdown.server";
 import {
@@ -46,16 +46,19 @@ const IMAGE_EXT: Record<string, string> = {
 async function coversFor(env: Env, ids: number[]) {
   if (ids.length === 0)
     return new Map<number, { key: string; count: number }>();
-  const rows = await getDb(env)
-    .select({
-      announcementId: announcementImages.announcementId,
-      key: announcementImages.key,
-      position: announcementImages.position,
-    })
-    .from(announcementImages)
-    .where(inArray(announcementImages.announcementId, ids))
-    .orderBy(asc(announcementImages.position))
-    .all();
+  const db = getDb(env);
+  const rows = await inSlices(ids, (slice) =>
+    db
+      .select({
+        announcementId: announcementImages.announcementId,
+        key: announcementImages.key,
+        position: announcementImages.position,
+      })
+      .from(announcementImages)
+      .where(inArray(announcementImages.announcementId, slice))
+      .orderBy(asc(announcementImages.position))
+      .all(),
+  );
   const map = new Map<number, { key: string; count: number }>();
   for (const r of rows) {
     const seen = map.get(r.announcementId);

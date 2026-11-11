@@ -23,6 +23,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return {
     today,
     people,
+    back: `/work/schedule?w=${startOfWeek(isDateKey(asked) ? asked : today)}`,
     initial: {
       date: isDateKey(asked) ? asked : today,
       status: "done" as const,
@@ -51,7 +52,7 @@ export default function NewPatrol({
 }: Route.ComponentProps) {
   return (
     <>
-      <TopBar back="/work/schedule" title="Обхід" />
+      <TopBar back={loaderData.back} title="Обхід" />
       <PatrolForm
         {...loaderData}
         withCard

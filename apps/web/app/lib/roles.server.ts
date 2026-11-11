@@ -15,7 +15,7 @@ export async function rolesFor(env: Env, email: string): Promise<Role[]> {
   return sortRoles(rows.map((r) => r.role));
 }
 
-/** Residents who hold any of these roles, e.g. to notify them. */
+/** Residents who hold any of these roles, e.g. to notify them; a block takes every role's rights. */
 export async function idsWithRoles(
   env: Env,
   roles: readonly Role[],
@@ -24,7 +24,9 @@ export async function idsWithRoles(
     .selectDistinct({ id: residents.id })
     .from(residents)
     .innerJoin(roleGrants, sql`${roleGrants.email} = lower(${residents.email})`)
-    .where(inArray(roleGrants.role, [...roles]))
+    .where(
+      and(inArray(roleGrants.role, [...roles]), eq(residents.blocked, false)),
+    )
     .all();
   return rows.map((r) => r.id);
 }

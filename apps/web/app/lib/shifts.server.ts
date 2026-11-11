@@ -29,7 +29,7 @@ import {
   rankShiftStats,
   type ShiftErrors,
 } from "./shifts";
-import { addDays } from "./time";
+import { addDays, kyivNow } from "./time";
 
 /** Everyone who may stand duty, by name: the squad, its head, the site manager. */
 export async function squadPeople(env: Env) {
@@ -45,6 +45,26 @@ export async function squadPeople(env: Env) {
     .where(and(inArray(residents.id, ids), eq(residents.blocked, false)))
     .all();
   return people.sort(byName);
+}
+
+/**
+ * The squad, plus anyone a record already names who has left it since, so
+ * editing an old shift or patrol never quietly drops them.
+ */
+export async function squadPeopleWith(env: Env, keep: readonly number[]) {
+  const people = await squadPeople(env);
+  const gone = keep.filter((id) => !people.some((p) => p.id === id));
+  if (gone.length === 0) return people;
+  const former = await getDb(env)
+    .select({
+      id: residents.id,
+      name: residents.name,
+      telegram: residents.telegram,
+    })
+    .from(residents)
+    .where(inArray(residents.id, gone))
+    .all();
+  return [...people, ...former].sort(byName);
 }
 
 /** The week from its Monday: each day, whether it has duty and its shift. */
@@ -77,8 +97,8 @@ export async function weekOfShifts(
             note: row.s.note,
             mine: row.s.residentId === actor.id,
             canSign: row.s.residentId === null && stand && !past,
-            canLeave: canLeaveShift(actor, row.s) && !past,
-            canEdit: canEditShift(actor, row.s),
+            canLeave: canLeaveShift(actor, row.s, today) && !past,
+            canEdit: canEditShift(actor, row.s, today),
           }
         : null,
     };
@@ -91,7 +111,7 @@ export async function getShift(env: Env, actor: Actor, id: number) {
     .from(shifts)
     .where(eq(shifts.id, id))
     .get();
-  return s && canEditShift(actor, s) ? s : null;
+  return s && canEditShift(actor, s, kyivNow().date) ? s : null;
 }
 
 export type ShiftResult =
@@ -111,6 +131,7 @@ async function parse(
     leads: leadsSquad(actor),
     allowed: people.map((p) => p.id),
     keep,
+    today: kyivNow().date,
   });
 }
 
@@ -199,6 +220,7 @@ export async function signShift(
   const s = await db.select().from(shifts).where(eq(shifts.id, id)).get();
   if (!s) return "Такої вахти немає.";
   if (!hasDuty(s.date)) return NO_DUTY_MESSAGE;
+  if (s.date < kyivNow().date) return "Ця вахта вже минула.";
   const taken = await db
     .update(shifts)
     .set({ residentId: actor.id })
@@ -223,7 +245,8 @@ export async function leaveShift(
 ): Promise<string | null> {
   const db = getDb(env);
   const s = await db.select().from(shifts).where(eq(shifts.id, id)).get();
-  if (!s || !canLeaveShift(actor, s)) return "Звільнити цю вахту не можна.";
+  if (!s || !canLeaveShift(actor, s, kyivNow().date))
+    return "Звільнити цю вахту не можна.";
   await db.update(shifts).set({ residentId: null }).where(eq(shifts.id, id));
   await activity(db, {
     actorId: actor.id,

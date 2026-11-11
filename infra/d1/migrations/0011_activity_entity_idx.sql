@@ -1,0 +1,1 @@
+CREATE INDEX `activity_entity_idx` ON `activity_log` (`entity`,`entity_id`);

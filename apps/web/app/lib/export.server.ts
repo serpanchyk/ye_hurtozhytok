@@ -69,28 +69,29 @@ export async function squadWorkbook(
         .orderBy(asc(tasks.id))
         .all(),
     ]);
-  const taskIds = taskRows.map((t) => t.id);
+  // The same cards as a subquery: an id list would outgrow D1's 100 bound values.
+  const squadCards = and(eq(tasks.board, "squad"), isNull(tasks.deletedAt));
   const [assignees, log, stats] = await Promise.all([
-    taskIds.length
-      ? db
-          .select({ key: taskAssignees.taskId, name: residents.name })
-          .from(taskAssignees)
-          .innerJoin(residents, eq(residents.id, taskAssignees.residentId))
-          .where(inArray(taskAssignees.taskId, taskIds))
-          .all()
-      : [],
+    db
+      .select({ key: taskAssignees.taskId, name: residents.name })
+      .from(taskAssignees)
+      .innerJoin(tasks, eq(tasks.id, taskAssignees.taskId))
+      .innerJoin(residents, eq(residents.id, taskAssignees.residentId))
+      .where(squadCards)
+      .all(),
     db
       .select()
       .from(activityLog)
       .where(
         or(
           inArray(activityLog.entity, ["shift", "patrol"]),
-          taskIds.length
-            ? and(
-                eq(activityLog.entity, "task"),
-                inArray(activityLog.entityId, taskIds),
-              )
-            : undefined,
+          and(
+            eq(activityLog.entity, "task"),
+            inArray(
+              activityLog.entityId,
+              db.select({ id: tasks.id }).from(tasks).where(squadCards),
+            ),
+          ),
         ),
       )
       .orderBy(desc(activityLog.createdAt))
@@ -150,7 +151,7 @@ export async function squadWorkbook(
       ]),
     },
     {
-      name: "Завдання",
+      name: "Картки",
       columns: [
         { title: "№", width: 6 },
         { title: "Назва", width: 36 },
@@ -206,7 +207,7 @@ export async function squadWorkbook(
         ACTION_TEXT[e.action] ?? e.action,
         ENTITY_TEXT[e.entity] ?? e.entity,
         subjects[e.entity]?.get(e.entityId) ?? `№${e.entityId}`,
-        describeDetails(e.details, names),
+        describeDetails(e.details, names, e.entity),
       ]),
     },
   ];

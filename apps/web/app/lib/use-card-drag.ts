@@ -1,7 +1,10 @@
 import { useEffect, useRef, type RefObject } from "react";
 
-/** How long a finger rests on a card before it lifts; a quick swipe still scrolls. */
-const HOLD_MS = 280;
+/**
+ * How long a finger rests on a card before it lifts: longer than a pause
+ * before scrolling, a little shorter than the phone's own long press.
+ */
+const HOLD_MS = 450;
 /** Movement that turns a touch into a scroll, or a mouse press into a drag. */
 const SLOP = 8;
 /** Distance from the top, or from the tab bar, where the page scrolls by itself. */

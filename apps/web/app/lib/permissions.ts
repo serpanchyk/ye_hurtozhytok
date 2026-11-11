@@ -212,24 +212,34 @@ export function canStandShift(person: WithRoles): boolean {
   return isSquad(person);
 }
 
-/** Those who lead change anyone's shift; others the ones they made. */
+/**
+ * Those who lead change any shift. Others only one they added, before its
+ * day is over and while nobody else is on it, so no one is taken off a
+ * shift by someone who does not lead.
+ */
 export function canEditShift(
   actor: Actor,
-  shift: { createdBy: number },
+  shift: { createdBy: number; residentId: number | null; date: string },
+  today: string,
 ): boolean {
-  return isSquad(actor) && (leadsSquad(actor) || shift.createdBy === actor.id);
+  if (!isSquad(actor)) return false;
+  if (leadsSquad(actor)) return true;
+  return (
+    shift.createdBy === actor.id &&
+    shift.date >= today &&
+    (shift.residentId === null || shift.residentId === actor.id)
+  );
 }
 
-/** «Не зможу»: the person on duty, or someone who leads the squad. */
+/** «Не зможу»: the person on duty before the day is over, or someone who leads the squad. */
 export function canLeaveShift(
   actor: Actor,
-  shift: { residentId: number | null },
+  shift: { residentId: number | null; date: string },
+  today: string,
 ): boolean {
-  return (
-    shift.residentId !== null &&
-    isSquad(actor) &&
-    (shift.residentId === actor.id || leadsSquad(actor))
-  );
+  if (shift.residentId === null || !isSquad(actor)) return false;
+  if (leadsSquad(actor)) return true;
+  return shift.residentId === actor.id && shift.date >= today;
 }
 
 /** Those who lead change any patrol; others the ones they recorded. */
@@ -237,5 +247,5 @@ export function canEditPatrol(
   actor: Actor,
   patrol: { createdBy: number },
 ): boolean {
-  return canEditShift(actor, patrol);
+  return isSquad(actor) && (leadsSquad(actor) || patrol.createdBy === actor.id);
 }

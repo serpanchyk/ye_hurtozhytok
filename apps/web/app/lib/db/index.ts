@@ -9,6 +9,17 @@ export function getDb(env: Env) {
 
 export type Db = ReturnType<typeof getDb>;
 
+/** D1 binds at most 100 values a query, so long id lists go in slices. */
+export async function inSlices<T>(
+  ids: readonly number[],
+  run: (slice: number[]) => Promise<T[]>,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let i = 0; i < ids.length; i += 90)
+    out.push(...(await run(ids.slice(i, i + 90))));
+  return out;
+}
+
 export type ActivityAction =
   | "booking.created"
   | "booking.cancelled"

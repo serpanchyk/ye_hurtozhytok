@@ -12,6 +12,7 @@ import { upcomingFor } from "~/lib/bookings.server";
 import { initials, roomLabel } from "~/lib/profile";
 import {
   canProposeAnnouncement,
+  canWriteComplaint,
   canPublishAnnouncements,
 } from "~/lib/permissions";
 import { ROLE_LABELS } from "~/lib/roles";
@@ -35,6 +36,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     room: r.room,
     telegram: r.telegram,
     blocked: r.blocked,
+    writes: canWriteComplaint(r),
     roles: r.roles.map((role) => ROLE_LABELS[role]),
     // Those who publish post from the work pages and never have proposals.
     proposes: canProposeAnnouncement(r) && !canPublishAnnouncements(r),
@@ -142,7 +144,7 @@ export default function Me({ loaderData }: Route.ComponentProps) {
 
       <div className="section-h">
         <h3>Мої звернення</h3>
-        <Link to="/complaints/new">Написати</Link>
+        {p.writes && <Link to="/complaints/new">Написати</Link>}
       </div>
       {p.complaints.length ? (
         <ComplaintRows list={p.complaints} />

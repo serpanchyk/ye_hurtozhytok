@@ -5,12 +5,13 @@ import { useRevalidator } from "react-router";
  * Quietly refreshes loader data while the page is visible, so bookings made or
  * cancelled by others show up without a manual reload.
  */
-export function usePolling(intervalMs = 20_000) {
+export function usePolling(intervalMs = 20_000, enabled = true) {
   const revalidator = useRevalidator();
   const ref = useRef(revalidator);
   ref.current = revalidator;
 
   useEffect(() => {
+    if (!enabled) return;
     const id = setInterval(() => {
       if (
         document.visibilityState === "visible" &&
@@ -21,5 +22,5 @@ export function usePolling(intervalMs = 20_000) {
       }
     }, intervalMs);
     return () => clearInterval(id);
-  }, [intervalMs]);
+  }, [intervalMs, enabled]);
 }

@@ -28,9 +28,11 @@
     ],
   },
   // Every minute: reminders 15 minutes before a booking starts, then the next
-  // batch of queued push messages (important announcements).
+  // batch of queued push messages (important announcements). Every two
+  // minutes, apart: the squad's Telegram bot (SQUAD_BOT_CRON in
+  // app/lib/scheduled.server.ts).
   "triggers": {
-    "crons": ["* * * * *"],
+    "crons": ["* * * * *", "*/2 * * * *"],
   },
   // Public address is https://ehurtozhytok.pages.dev (apps/gateway forwards to this Worker).
   "workers_dev": false,

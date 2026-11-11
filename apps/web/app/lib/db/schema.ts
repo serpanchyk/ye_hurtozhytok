@@ -27,6 +27,10 @@ export const ANNOUNCEMENT_STATUSES = [
   "rejected",
 ] as const;
 export type AnnouncementStatus = (typeof ANNOUNCEMENT_STATUSES)[number];
+// Squad-only announcements were dropped; the column goes in the release after
+// the one whose code stopped reading it, so the old Worker never meets a
+// database without it while CI deploys.
+export const AUDIENCES = ["all", "squad"] as const;
 // The council and the squad each keep their own task board.
 export const BOARDS = ["council", "squad"] as const;
 export type Board = (typeof BOARDS)[number];
@@ -174,6 +178,7 @@ export const announcements = sqliteTable(
     important: integer("important", { mode: "boolean" })
       .notNull()
       .default(false),
+    audience: text("audience", { enum: AUDIENCES }).notNull().default("all"),
     status: text("status", { enum: ANNOUNCEMENT_STATUSES })
       .notNull()
       .default("pending"),
@@ -366,6 +371,8 @@ export const activityLog = sqliteTable(
   },
   (t) => [
     index("activity_created_idx").on(t.createdAt),
+    // A card's history, and the bot, look entries up by what they are about.
+    index("activity_entity_idx").on(t.entity, t.entityId),
     // The daily limit on actions counts one person's recent entries.
     index("activity_actor_idx").on(t.actorId, t.createdAt),
   ],

@@ -1,7 +1,7 @@
 import { createRequestHandler } from "react-router";
 
 import { SECURITY_HEADERS, newNonce } from "../app/lib/csp";
-import { runEveryMinute } from "../app/lib/scheduled.server";
+import { runScheduled } from "../app/lib/scheduled.server";
 
 declare module "react-router" {
   export interface AppLoadContext {
@@ -32,6 +32,6 @@ export default {
     return secured;
   },
   scheduled(controller, env, ctx) {
-    ctx.waitUntil(runEveryMinute(env, controller.scheduledTime));
+    ctx.waitUntil(runScheduled(env, controller.cron, controller.scheduledTime));
   },
 } satisfies ExportedHandler<Env>;

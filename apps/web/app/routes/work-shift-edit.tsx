@@ -8,7 +8,7 @@ import { canStandShift, leadsSquad } from "~/lib/permissions";
 import {
   deleteShift,
   getShift,
-  squadPeople,
+  squadPeopleWith,
   updateShift,
 } from "~/lib/shifts.server";
 import { kyivNow, startOfWeek } from "~/lib/time";
@@ -25,7 +25,10 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const me = await requireProfile(request, env);
   const s = await getShift(env, me, Number(params.id));
   if (!s) throw new Response(NOT_YOURS, { status: 403 });
-  const people = await squadPeople(env);
+  const people = await squadPeopleWith(
+    env,
+    s.residentId === null ? [] : [s.residentId],
+  );
   return {
     today: kyivNow().date,
     shift: s,

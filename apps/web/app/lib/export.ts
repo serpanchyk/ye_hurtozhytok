@@ -1,7 +1,7 @@
 /** Plain-Ukrainian wording for the squad's Excel file. */
 import { fmtMin } from "./booking";
 import type { PatrolStatus } from "./db/schema";
-import { STATUS_LABELS } from "./tasks";
+import { BOARD_LABELS, STATUS_LABELS } from "./tasks";
 import { kyivDateKey, kyivMinute } from "./time";
 import type { DateCell } from "./xlsx";
 
@@ -47,7 +47,13 @@ const KEY_TEXT: Record<string, string> = {
   public: "публічна",
   before: "було",
   after: "стало",
+  from: "з",
+  to: "до",
+  complaint: "зі звернення",
+  patrol: "з обходу",
 };
+
+const BOARD_KEYS = new Set(["board", "from", "to"]);
 
 export function dateCell(dateKey: string | null): DateCell | null {
   return dateKey ? { date: dateKey } : null;
@@ -66,36 +72,34 @@ export function dayText(dateKey: string): string {
   return `${d}.${m}.${y}`;
 }
 
-function valueText(
-  key: string,
-  value: unknown,
-  names: Map<number, string>,
-): string {
+type Context = { names: Map<number, string>; entity: string };
+
+function valueText(key: string, value: unknown, ctx: Context): string {
   if (value === null || value === undefined || value === "")
     return key === "residentId" ? "вільна" : "—";
   if (key === "residentId" && typeof value === "number")
-    return names.get(value) ?? `№${value}`;
+    return ctx.names.get(value) ?? `№${value}`;
   if (key === "people" && Array.isArray(value))
-    return value.map((id) => names.get(Number(id)) ?? `№${id}`).join(", ");
-  if (key === "status" && typeof value === "string")
-    return (
-      (STATUS_LABELS as Record<string, string>)[value] ??
-      (PATROL_STATUS_TEXT as Record<string, string>)[value] ??
-      value
-    );
-  if (key === "date" && typeof value === "string") return dayText(value);
+    return value.map((id) => ctx.names.get(Number(id)) ?? `№${id}`).join(", ");
+  if (typeof value === "string") {
+    if (key === "date") return dayText(value);
+    // A patrol's «done» is «Був», a card's is «Готово»; «з»/«до» are boards or states.
+    const states: Record<string, string> =
+      ctx.entity === "patrol" ? PATROL_STATUS_TEXT : STATUS_LABELS;
+    const boards: Record<string, string> = BOARD_LABELS;
+    if (BOARD_KEYS.has(key) && boards[value]) return boards[value];
+    if ((key === "status" || BOARD_KEYS.has(key)) && states[value])
+      return states[value];
+  }
   if (typeof value === "boolean") return value ? "так" : "ні";
   if (typeof value === "object")
-    return describeObject(value as Record<string, unknown>, names);
+    return describeObject(value as Record<string, unknown>, ctx);
   return String(value);
 }
 
-function describeObject(
-  value: Record<string, unknown>,
-  names: Map<number, string>,
-): string {
+function describeObject(value: Record<string, unknown>, ctx: Context): string {
   return Object.entries(value)
-    .map(([k, v]) => `${KEY_TEXT[k] ?? k}: ${valueText(k, v, names)}`)
+    .map(([k, v]) => `${KEY_TEXT[k] ?? k}: ${valueText(k, v, ctx)}`)
     .join("; ");
 }
 
@@ -103,12 +107,13 @@ function describeObject(
 export function describeDetails(
   details: string | null,
   names: Map<number, string>,
+  entity = "",
 ): string {
   if (!details) return "";
   try {
     const parsed: unknown = JSON.parse(details);
     return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? describeObject(parsed as Record<string, unknown>, names)
+      ? describeObject(parsed as Record<string, unknown>, { names, entity })
       : details;
   } catch {
     return details;

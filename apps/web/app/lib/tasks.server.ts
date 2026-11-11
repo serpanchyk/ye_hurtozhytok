@@ -214,6 +214,12 @@ export async function updateTask(
   if (!t) return null;
   const parsed = parseTaskForm(form);
   if (!parsed.ok) return parsed;
+  // A complaint's card stays private: the room it names is nobody's business.
+  if (await isComplaintCard(env, id)) parsed.values.public = false;
+  // Moved to another board while the form was open: its new board decided
+  // who sees it, the old form does not.
+  else if (form.get("board") && form.get("board") !== t.board)
+    parsed.values.public = t.public;
   await db
     .update(tasks)
     .set({ ...parsed.values, updatedAt: Date.now() })
@@ -253,7 +259,7 @@ export async function setTaskStatus(
     action: "task.status",
     entity: "task",
     entityId: id,
-    details: { from: t.status, status },
+    details: { board: t.board, from: t.status, status },
   });
   return true;
 }
@@ -286,6 +292,7 @@ export async function takeTask(
     action: "task.taken",
     entity: "task",
     entityId: id,
+    details: { board: t.board },
   });
   return true;
 }

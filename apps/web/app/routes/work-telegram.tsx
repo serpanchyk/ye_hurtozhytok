@@ -22,6 +22,7 @@ import {
   type TelegramChat,
 } from "~/lib/telegram.server";
 import { kyivDateKey, kyivNow } from "~/lib/time";
+import { usePolling } from "~/lib/use-polling";
 import type { Route } from "./+types/work-telegram";
 
 export const meta: Route.MetaFunction = () => [
@@ -39,10 +40,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     getSetting<TelegramChat>(env, SETTING_CHAT),
     getSetting<PendingLink>(env, SETTING_LINK),
     getSetting<LastSend>(env, SETTING_LAST),
-    // Whether Telegram sends the group's messages here and not, say, to Оперета.
-    telegram<{ url: string }>(env, "getWebhookInfo")
-      .then((info) => info.url === webhookUrl(env))
-      .catch(() => false),
+    // Whether Telegram sends the group's messages here and not, say, to
+    // Оперета, and what went wrong with them last.
+    telegram<{ url: string; last_error_message?: string }>(
+      env,
+      "getWebhookInfo",
+    )
+      .then((info) => ({
+        ours: info.url === webhookUrl(env),
+        error: info.last_error_message ?? null,
+      }))
+      .catch(() => ({ ours: false, error: null })),
   ]);
   const today = kyivNow().date;
   return {
@@ -91,15 +99,15 @@ export async function action({ request, context }: Route.ActionArgs) {
       }
       case "hook":
         await hook(env);
-        return { notice: "Зв’язок налаштовано." };
+        return { notice: "Звʼязок налаштовано." };
       case "test":
       case "stats": {
         if (!chat) return { error: "Групу ще не підключено." };
         const text =
           intent === "test"
-            ? "Перевірка зв’язку з єГуртожитком. Усе працює."
+            ? "Перевірка звʼязку з єГуртожитком. Усе працює."
             : await shiftTopText(env, kyivNow().date);
-        return (await postToSquad(env, chat, text))
+        return (await postToSquad(env, chat, text)) === "sent"
           ? { notice: "Надіслано в групу." }
           : { error: "Не вдалося надіслати. Можливо, бота видалили з групи." };
       }
@@ -154,6 +162,8 @@ export default function WorkTelegram({
   loaderData: d,
   actionData,
 }: Route.ComponentProps) {
+  // The group's name appears once /connect is sent; no reload button in the app.
+  usePolling(5_000, d.bot && !!d.pending && !d.chat);
   return (
     <>
       <TopBar back="/work?s=manager" title="Telegram-група" />
@@ -189,12 +199,14 @@ export default function WorkTelegram({
               <span style={{ flex: 1, minWidth: 0 }}>
                 <b>{d.chat.title}</b>
                 <span className="sub">
-                  {d.hooked
-                    ? "Підключено"
-                    : "Підключено, але зв’язок веде не сюди"}
+                  {!d.hooked.ours
+                    ? "Підключено, але звʼязок веде не сюди"
+                    : d.hooked.error
+                      ? `Telegram повідомляє: ${d.hooked.error}`
+                      : "Підключено"}
                 </span>
               </span>
-              {!d.hooked && (
+              {(!d.hooked.ours || d.hooked.error) && (
                 <Form method="post">
                   <button className="pill-btn" name="intent" value="hook">
                     Налаштувати
@@ -246,7 +258,7 @@ export default function WorkTelegram({
                 /connect@{d.pending.username} {d.pending.code}
               </code>
             </li>
-            <li>Бот відповість у групі, а тут з’явиться її назва.</li>
+            <li>Бот відповість у групі, а тут зʼявиться її назва.</li>
           </ol>
           <div className="home-actions">
             <IntentButton intent="connect">Створити новий код</IntentButton>

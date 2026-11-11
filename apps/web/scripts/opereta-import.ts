@@ -16,7 +16,8 @@
  * Whoever has not signed in yet gets a resident row "pending:<email>" that
  * their first sign-in takes over. Keep emails.json out of the repository.
  *
- * Shifts, patrols and cards keep their Оперета ids: the tables must be empty.
+ * Shifts, patrols and cards get new ids, so cards the new app already has do
+ * not clash; a day that already has a shift does (one shift a day).
  * Squad-only announcements are not moved (the app has none), nor Оперета's
  * own accounts and codes.
  */
@@ -120,37 +121,64 @@ for (const m of data.members) {
 }
 
 // ─── Shifts, patrols, cards ──────────────────────────────────────────────
+// They get new ids (the new app may already have cards of its own); every
+// reference finds the row again by what is unique about it.
+const shiftRef = new Map(
+  data.shifts.map((s) => [
+    s.id,
+    `(SELECT id FROM shifts WHERE date = ${lit(s.date)})`,
+  ]),
+);
+const patrolRef = new Map(
+  data.patrols.map((p) => [
+    p.id,
+    `(SELECT id FROM patrols WHERE date = ${lit(p.date)} AND created_at = ${lit(p.created_at)})`,
+  ]),
+);
+const taskRef = new Map(
+  data.tasks.map((t) => [
+    t.id,
+    `(SELECT id FROM tasks WHERE board = 'squad' AND created_at = ${lit(t.created_at)} AND title = ${lit(t.title)})`,
+  ]),
+);
+const ref = (refs: Map<unknown, string>, id: unknown) => {
+  if (id === null || id === undefined) return "NULL";
+  const r = refs.get(id);
+  if (!r) throw new Error(`Nothing to refer to: ${String(id)}`);
+  return r;
+};
+
+// One shift a day: a day the new app already has fails loudly here.
 for (const s of data.shifts)
   out.push(
-    `INSERT INTO shifts (id, date, resident_id, note, created_by, created_at) VALUES (${lit(s.id)}, ${lit(s.date)}, ${rid(s.member_id)}, ${lit(s.note)}, ${rid(s.created_by)}, ${lit(s.created_at)});`,
+    `INSERT INTO shifts (date, resident_id, note, created_by, created_at) VALUES (${lit(s.date)}, ${rid(s.member_id)}, ${lit(s.note)}, ${rid(s.created_by)}, ${lit(s.created_at)});`,
   );
 for (const p of data.patrols)
   out.push(
-    `INSERT INTO patrols (id, date, status, notes, created_by, created_at) VALUES (${lit(p.id)}, ${lit(p.date)}, ${lit(p.status)}, ${lit(p.notes)}, ${rid(p.created_by)}, ${lit(p.created_at)});`,
+    `INSERT INTO patrols (date, status, notes, created_by, created_at) VALUES (${lit(p.date)}, ${lit(p.status)}, ${lit(p.notes)}, ${rid(p.created_by)}, ${lit(p.created_at)});`,
   );
 for (const pm of data.patrol_members)
   out.push(
-    `INSERT INTO patrol_members (patrol_id, resident_id) VALUES (${lit(pm.patrol_id)}, ${rid(pm.member_id)});`,
+    `INSERT INTO patrol_members (patrol_id, resident_id) VALUES (${ref(patrolRef, pm.patrol_id)}, ${rid(pm.member_id)});`,
   );
 const createdAt = new Map(data.tasks.map((t) => [t.id, t.created_at]));
 for (const t of data.tasks)
   // Squad cards stay private; Оперета kept no finish time, its last change is closest.
   out.push(
-    `INSERT INTO tasks (id, board, title, details, place, status, public, patrol_id, created_by, created_at, updated_at, done_at, deleted_at) VALUES (${lit(t.id)}, 'squad', ${lit(t.title)}, ${lit(t.details)}, ${lit(t.place)}, ${lit(t.status)}, 0, ${lit(t.patrol_id)}, ${rid(t.created_by)}, ${lit(t.created_at)}, ${lit(t.updated_at)}, ${t.status === "done" ? lit(t.updated_at) : "NULL"}, NULL);`,
+    `INSERT INTO tasks (board, title, details, place, status, public, patrol_id, created_by, created_at, updated_at, done_at, deleted_at) VALUES ('squad', ${lit(t.title)}, ${lit(t.details)}, ${lit(t.place)}, ${lit(t.status)}, 0, ${ref(patrolRef, t.patrol_id)}, ${rid(t.created_by)}, ${lit(t.created_at)}, ${lit(t.updated_at)}, ${t.status === "done" ? lit(t.updated_at) : "NULL"}, NULL);`,
   );
 for (const a of data.task_assignees)
   out.push(
-    `INSERT INTO task_assignees (task_id, resident_id, created_at) VALUES (${lit(a.task_id)}, ${rid(a.member_id)}, ${lit(createdAt.get(a.task_id) ?? now)});`,
+    `INSERT INTO task_assignees (task_id, resident_id, created_at) VALUES (${ref(taskRef, a.task_id)}, ${rid(a.member_id)}, ${lit(createdAt.get(a.task_id) ?? now)});`,
   );
 
 // ─── The activity log ────────────────────────────────────────────────────
 const ACTION: Record<string, string> = { "task.edited": "task.updated" };
-const kept: Record<string, Set<unknown>> = {
-  shift: new Set(data.shifts.map((s) => s.id)),
-  patrol: new Set(data.patrols.map((p) => p.id)),
-  task: new Set(data.tasks.map((t) => t.id)),
+const refs: Record<string, Map<unknown, string>> = {
+  shift: shiftRef,
+  patrol: patrolRef,
+  task: taskRef,
 };
-const maxId = (ids: Set<unknown>) => Math.max(0, ...[...ids].map(Number));
 
 /** Details as a SQL json_object(), with Оперета member ids turned into resident ids. */
 function details(value: unknown): string {
@@ -173,18 +201,16 @@ let skipped = 0;
 for (const e of data.activity_log) {
   const entity = String(e.entity);
   // Оперета's accounts, codes, its own announcements and bot setup stay there.
-  if (!(entity in kept)) continue;
-  // A gone row whose id the new app may hand out again would mix histories.
-  if (
-    !kept[entity].has(e.entity_id) &&
-    Number(e.entity_id) > maxId(kept[entity])
-  ) {
+  if (!(entity in refs)) continue;
+  // Rows deleted in Оперета have no new id to point at.
+  const target = refs[entity].get(e.entity_id);
+  if (!target) {
     skipped++;
     continue;
   }
   const parsed = e.details ? (JSON.parse(String(e.details)) as unknown) : null;
   out.push(
-    `INSERT INTO activity_log (actor_id, action, entity, entity_id, details, created_at) VALUES (${rid(e.actor_id)}, ${lit(ACTION[String(e.action)] ?? e.action)}, ${lit(entity)}, ${lit(e.entity_id)}, ${parsed === null ? "NULL" : details(parsed)}, ${lit(e.created_at)});`,
+    `INSERT INTO activity_log (actor_id, action, entity, entity_id, details, created_at) VALUES (${rid(e.actor_id)}, ${lit(ACTION[String(e.action)] ?? e.action)}, ${lit(entity)}, ${target}, ${parsed === null ? "NULL" : details(parsed)}, ${lit(e.created_at)});`,
   );
 }
 

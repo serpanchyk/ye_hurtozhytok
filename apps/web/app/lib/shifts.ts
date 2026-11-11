@@ -36,6 +36,8 @@ export function parseShiftForm(
     leads: boolean;
     allowed: readonly number[];
     keep?: number | null;
+    /** Days before it are history: only those who lead write them. */
+    today: string;
   },
 ): { ok: true; values: ShiftValues } | { ok: false; errors: ShiftErrors } {
   const errors: ShiftErrors = {};
@@ -43,6 +45,8 @@ export function parseShiftForm(
   if (date.error !== undefined) errors.date = date.error;
   else if (!date.value) errors.date = "Оберіть день.";
   else if (!hasDuty(date.value)) errors.date = NO_DUTY_MESSAGE;
+  else if (!ctx.leads && date.value < ctx.today)
+    errors.date = "Минулий день записує лише голова загону.";
 
   const who = String(form.get("who") ?? "free");
   let residentId: number | null = null;
@@ -54,7 +58,11 @@ export function parseShiftForm(
     else if (!ctx.allowed.includes(id)) errors.who = "Ця людина не в загоні.";
     else residentId = id;
   }
-  if (residentId !== null && !ctx.allowed.includes(residentId))
+  if (
+    residentId !== null &&
+    residentId !== ctx.keep &&
+    !ctx.allowed.includes(residentId)
+  )
     errors.who ??= "На вахті стоять лише ті, хто в загоні.";
 
   const note = String(form.get("note") ?? "")

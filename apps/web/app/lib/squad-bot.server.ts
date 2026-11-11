@@ -61,14 +61,19 @@ const SETTING_SENT = "telegram.sent";
 const MORNING = 9 * 60;
 const EVENING = 18 * 60;
 const SUNDAY = 6;
-/** Log entries read a minute; Telegram lets a bot post about 20 a minute to a group. */
+/** Log entries read a run. */
 const BATCH = 40;
+/** Posts a run (every two minutes): well under Telegram's ≈20 a minute per group. */
+const MAX_POSTS = 8;
+/** Older unread news is not news: after the bot was off, it starts from now. */
+const STALE_MS = 2 * 60 * 60_000;
 
+/** Its own cron trigger, so it never eats the reminders' request budget. */
 export async function runSquadBot(env: Env, scheduledTime: number) {
   const chat = await squadChat(env);
   if (!chat) return;
-  await postNews(env, chat);
   await postDaily(env, chat, scheduledTime);
+  await postNews(env, chat);
 }
 
 /** From now on: the log written before is never posted. */
@@ -98,11 +103,12 @@ async function claim(env: Env, key: string, from: unknown, to: unknown) {
 type Entry = typeof activityLog.$inferSelect;
 type Details = Record<string, unknown>;
 
+const ABOUT_SQUAD = ["task", "shift", "patrol"];
+
 async function postNews(env: Env, chat: TelegramChat) {
   const cursor = await getSetting<number>(env, SETTING_CURSOR);
   if (cursor === null) return readNewsFromNow(env);
-  const db = getDb(env);
-  const read = await db
+  const read = await getDb(env)
     .select()
     .from(activityLog)
     .where(gt(activityLog.id, cursor))
@@ -110,17 +116,30 @@ async function postNews(env: Env, chat: TelegramChat) {
     .limit(BATCH)
     .all();
   if (read.length === 0) return;
-  if (!(await claim(env, SETTING_CURSOR, cursor, read.at(-1)!.id))) return;
-  const entries = read.filter((e) =>
-    ["task", "shift", "patrol"].includes(e.entity),
-  );
-  if (entries.length === 0) return;
+  if (Date.now() - read[0].createdAt > STALE_MS) return readNewsFromNow(env);
+  const entries = read.filter((e) => ABOUT_SQUAD.includes(e.entity));
+  const facts = entries.length ? await gather(env, entries) : null;
 
-  const facts = await gather(env, entries);
-  for (const entry of entries) {
-    const text = newsFor(entry, facts, env.APP_URL);
-    if (text) await postToSquad(env, chat, text);
+  // The cursor moves one posted entry at a time (an overlapping run then
+  // never posts it too), and back when Telegram asks to wait.
+  let at = cursor;
+  let posts = 0;
+  for (const e of entries) {
+    const text = facts && newsFor(e, facts, env.APP_URL);
+    if (!text) continue;
+    if (posts === MAX_POSTS) return;
+    if (!(await claim(env, SETTING_CURSOR, at, e.id))) return;
+    const before = at;
+    at = e.id;
+    if ((await postToSquad(env, chat, text)) === "later") {
+      await claim(env, SETTING_CURSOR, at, before);
+      return;
+    }
+    posts++;
   }
+  // Past the entries that are not the squad's business.
+  const last = read.at(-1)!.id;
+  if (last > at) await claim(env, SETTING_CURSOR, at, last);
 }
 
 const detailsOf = (e: Entry): Details =>
@@ -190,17 +209,18 @@ async function gather(env: Env, entries: Entry[]) {
   };
 }
 
-type Facts = Awaited<ReturnType<typeof gather>>;
+export type Facts = Awaited<ReturnType<typeof gather>>;
 
 /** The message for one log entry, or null when the squad need not hear of it. */
-function newsFor(e: Entry, f: Facts, url: string): string | null {
+export function newsFor(e: Entry, f: Facts, url: string): string | null {
   const d = detailsOf(e);
   const actor = f.name(e.actorId) ?? "Хтось";
   const today = kyivDateKey(e.createdAt);
 
   if (e.entity === "task") {
     const t = f.card.get(e.entityId);
-    if (!t) return null;
+    // A card deleted since is not news, and its details stay unsaid.
+    if (!t || t.deletedAt !== null) return null;
     if (e.action === "task.moved") {
       if (d.to === "squad")
         return newCardMessage(url, {
@@ -212,8 +232,8 @@ function newsFor(e: Entry, f: Facts, url: string): string | null {
         return cardToCouncilMessage(url, { ...t, movedBy: actor });
       return null;
     }
-    // Only the squad's own board; the council's has no group here.
-    if (t.board !== "squad") return null;
+    // Only the squad's own board, as it was then; the council's has no group here.
+    if ((str(d.board) ?? t.board) !== "squad") return null;
     switch (e.action) {
       case "task.created": {
         const origin = d.complaint
@@ -351,30 +371,30 @@ async function postDaily(env: Env, chat: TelegramChat, at: number) {
   const sent = (await getSetting<Sent>(env, SETTING_SENT)) ?? {};
   const which = morning ? "morning" : "evening";
   if (sent[which] === today) return;
-  if (!(await claim(env, SETTING_SENT, sent, { ...sent, [which]: today })))
-    return;
+  const claimed = { ...sent, [which]: today };
+  if (!(await claim(env, SETTING_SENT, sent, claimed))) return;
 
   const url = env.APP_URL;
-  if (morning) {
-    await postToSquad(
-      env,
-      chat,
-      morningMessage(url, await morningFacts(env, today)),
-    );
-    return;
+  const texts: string[] = [];
+  if (morning) texts.push(morningMessage(url, await morningFacts(env, today)));
+  else {
+    const [day] = await daysOf(env, today, today);
+    const reminder = freeShiftMessage(url, day);
+    if (reminder) texts.push(reminder);
+    if (weekdayIndex(today) === SUNDAY) {
+      const monday = addDays(today, 1);
+      texts.push(
+        weekScheduleMessage(url, await daysOf(env, monday, addDays(monday, 6))),
+        await shiftTopText(env, today),
+      );
+    }
   }
-  const [day] = await daysOf(env, today, today);
-  const reminder = freeShiftMessage(url, day);
-  if (reminder) await postToSquad(env, chat, reminder);
-  if (weekdayIndex(today) === SUNDAY) {
-    const monday = addDays(today, 1);
-    await postToSquad(
-      env,
-      chat,
-      weekScheduleMessage(url, await daysOf(env, monday, addDays(monday, 6))),
-    );
-    await postToSquad(env, chat, await shiftTopText(env, today));
-  }
+  for (const [i, text] of texts.entries())
+    if ((await postToSquad(env, chat, text)) === "later") {
+      // Nothing went yet: the next run tries again; otherwise the rest is lost.
+      if (i === 0) await claim(env, SETTING_SENT, claimed, sent);
+      return;
+    }
 }
 
 /** «Хто скільки відсидів» for the group; also sent from the bot's page. */

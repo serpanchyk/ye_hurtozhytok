@@ -18,6 +18,8 @@ type Update = {
   my_chat_member?: { chat: Chat; new_chat_member: { status: string } };
 };
 
+/** Wrong codes before the waiting one is cancelled: six digits are guessable. */
+const MAX_MISSES = 5;
 const CONNECT = /^\/connect(?:@\w+)?(?:[\s ]+(\d[\d\s ]{5,}))?/i;
 const HELP =
   "Щоб підключити цю групу до єГуртожитку, відкрийте застосунок → Послуги → Управа → Telegram-група → «Підключити групу» й надішліть сюди команду, яку він покаже.";
@@ -52,6 +54,10 @@ export async function action({ request, context }: Route.ActionArgs) {
     );
     if (joined && isGroup(membership.chat))
       return reply(membership.chat.id, `Привіт! Я бот єГуртожитку. ${HELP}`);
+    // Removed from the connected group: stop writing there.
+    const chat = await getSetting<TelegramChat>(env, SETTING_CHAT);
+    if (chat?.id === membership.chat.id && !joined)
+      await deleteSetting(env, SETTING_CHAT);
     return ok();
   }
 
@@ -80,18 +86,26 @@ export async function action({ request, context }: Route.ActionArgs) {
   if (!code) return reply(message.chat.id, HELP);
 
   const pending = await getSetting<PendingLink>(env, SETTING_LINK);
-  if (!pending || pending.expiresAt < Date.now() || pending.code !== code)
+  if (!pending || pending.expiresAt < Date.now() || pending.code !== code) {
+    if (pending && pending.expiresAt >= Date.now()) {
+      const misses = (pending.misses ?? 0) + 1;
+      if (misses >= MAX_MISSES) await deleteSetting(env, SETTING_LINK);
+      else await setSetting(env, SETTING_LINK, { ...pending, misses });
+    }
     return reply(
       message.chat.id,
       "Код не підходить або застарів. Створіть новий у застосунку: Управа → Telegram-група.",
     );
+  }
 
+  // The log written before is not news for this group; set before the group
+  // itself, so no run in between posts it.
+  await readNewsFromNow(env);
   await setSetting(env, SETTING_CHAT, {
     id: message.chat.id,
     title: message.chat.title ?? "Група",
   } satisfies TelegramChat);
   await deleteSetting(env, SETTING_LINK);
-  await readNewsFromNow(env);
   await activity(getDb(env), {
     actorId: pending.by,
     action: "telegram.connected",

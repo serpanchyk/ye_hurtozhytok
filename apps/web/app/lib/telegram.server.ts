@@ -21,6 +21,8 @@ export type PendingLink = {
   username: string;
   expiresAt: number;
   by: number;
+  /** Wrong codes sent so far; after a few the code is cancelled. */
+  misses?: number;
 };
 export type LastSend = {
   at: number;
@@ -39,6 +41,17 @@ export function hasBot(env: Env): boolean {
   return Boolean(botToken(env));
 }
 
+/** A refusal from the Bot API, with what Telegram says to do about it. */
+export class TelegramError extends Error {
+  constructor(
+    message: string,
+    readonly code: number,
+    readonly parameters: { retry_after?: number; migrate_to_chat_id?: number },
+  ) {
+    super(message);
+  }
+}
+
 export async function telegram<T = unknown>(
   env: Env,
   method: string,
@@ -53,10 +66,14 @@ export async function telegram<T = unknown>(
     ok: boolean;
     result?: T;
     description?: string;
+    error_code?: number;
+    parameters?: { retry_after?: number; migrate_to_chat_id?: number };
   };
   if (!data.ok)
-    throw new Error(
+    throw new TelegramError(
       `Telegram ${method} failed: ${data.description ?? response.status}`,
+      data.error_code ?? response.status,
+      data.parameters ?? {},
     );
   return data.result as T;
 }
@@ -83,17 +100,17 @@ export async function squadChat(env: Env): Promise<TelegramChat | null> {
 /**
  * Posts to the squad's group. Never throws, so a failed message does not
  * break anything else; the outcome is kept so the site manager sees in the
- * app whether messages really go out. Returns whether it went.
+ * app whether messages really go out. "later" means Telegram asked to wait.
  */
 export async function postToSquad(
   env: Env,
   chat: TelegramChat,
   text: string,
-): Promise<boolean> {
+): Promise<"sent" | "later" | "failed"> {
   const summary = summaryLine(text);
-  try {
-    await telegram(env, "sendMessage", {
-      chat_id: chat.id,
+  const send = (chatId: number) =>
+    telegram(env, "sendMessage", {
+      chat_id: chatId,
       text,
       parse_mode: "HTML",
       disable_web_page_preview: true,
@@ -101,12 +118,23 @@ export async function postToSquad(
         Math.floor(kyivMinute(Date.now()) / 60),
       ),
     });
+  try {
+    try {
+      await send(chat.id);
+    } catch (error) {
+      // The group became a supergroup: follow it and try once more.
+      const moved =
+        error instanceof TelegramError && error.parameters.migrate_to_chat_id;
+      if (!moved) throw error;
+      await setSetting(env, SETTING_CHAT, { ...chat, id: moved });
+      await send(moved);
+    }
     await setSetting(env, SETTING_LAST, {
       at: Date.now(),
       ok: true,
       summary,
     } satisfies LastSend);
-    return true;
+    return "sent";
   } catch (error) {
     console.error(
       JSON.stringify({ event: "telegram.post_failed", message: String(error) }),
@@ -117,6 +145,8 @@ export async function postToSquad(
       summary,
       error: String(error).slice(0, 300),
     } satisfies LastSend).catch(() => undefined);
-    return false;
+    return error instanceof TelegramError && error.code === 429
+      ? "later"
+      : "failed";
   }
 }

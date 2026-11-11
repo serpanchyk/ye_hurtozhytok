@@ -38,7 +38,7 @@ describe("duty days", () => {
 });
 
 describe("shift form", () => {
-  const ctx = { me: 7, leads: false, allowed: [6, 7] };
+  const ctx = { me: 7, leads: false, allowed: [6, 7], today: "2026-11-11" };
   it("takes the shift for oneself or leaves it free", () => {
     expect(
       parseShiftForm(form({ date: "2026-11-12", who: "me" }), ctx),
@@ -60,12 +60,14 @@ describe("shift form", () => {
       parseShiftForm(form({ date: "2026-11-12", who: "6" }), {
         ...ctx,
         leads: true,
+        today: "2026-11-11",
       }).ok,
     ).toBe(true);
     expect(
       parseShiftForm(form({ date: "2026-11-12", who: "99" }), {
         ...ctx,
         leads: true,
+        today: "2026-11-11",
       }).ok,
     ).toBe(false);
   });
@@ -73,7 +75,13 @@ describe("shift form", () => {
 
 describe("editing a shift", () => {
   it("lets whoever is on it stay when someone else edits it", () => {
-    const ctx = { me: 7, leads: false, allowed: [6, 7], keep: 6 };
+    const ctx = {
+      me: 7,
+      leads: false,
+      allowed: [6, 7],
+      keep: 6,
+      today: "2026-11-11",
+    };
     expect(parseShiftForm(form({ date: "2026-11-12", who: "6" }), ctx).ok).toBe(
       true,
     );
@@ -92,17 +100,45 @@ describe("shift permissions", () => {
     expect(leadsSquad(manager)).toBe(true);
     expect(leadsSquad(member)).toBe(false);
   });
-  it("lets members change only their own shifts; the head any", () => {
-    expect(canEditShift(member, { createdBy: 7 })).toBe(true);
-    expect(canEditShift(member, { createdBy: 6 })).toBe(false);
-    expect(canEditShift(head, { createdBy: 7 })).toBe(true);
-    expect(canEditShift(council, { createdBy: 3 })).toBe(false);
+  const today = "2026-11-11";
+  const own = { createdBy: 7, residentId: null, date: "2026-11-12" };
+  it("lets members change only their own coming shifts; the head any", () => {
+    expect(canEditShift(member, own, today)).toBe(true);
+    expect(canEditShift(member, { ...own, residentId: 7 }, today)).toBe(true);
+    expect(canEditShift(member, { ...own, createdBy: 6 }, today)).toBe(false);
+    expect(canEditShift(head, { ...own, createdBy: 3 }, today)).toBe(true);
+    expect(canEditShift(council, { ...own, createdBy: 3 }, today)).toBe(false);
+  });
+  it("keeps someone who signed up from being taken off by the one who added it", () => {
+    expect(canEditShift(member, { ...own, residentId: 6 }, today)).toBe(false);
+    expect(canEditShift(head, { ...own, residentId: 6 }, today)).toBe(true);
+  });
+  it("leaves past shifts to those who lead", () => {
+    const past = { ...own, date: "2026-11-10" };
+    expect(canEditShift(member, past, today)).toBe(false);
+    expect(canEditShift(head, past, today)).toBe(true);
+    expect(
+      canLeaveShift(member, { residentId: 7, date: "2026-11-10" }, today),
+    ).toBe(false);
+    expect(
+      parseShiftForm(form({ date: "2026-11-10", who: "me" }), {
+        me: 7,
+        leads: false,
+        allowed: [7],
+        today,
+      }).ok,
+    ).toBe(false);
   });
   it("lets the one on duty or the head free a shift", () => {
-    expect(canLeaveShift(member, { residentId: 7 })).toBe(true);
-    expect(canLeaveShift(member, { residentId: 6 })).toBe(false);
-    expect(canLeaveShift(head, { residentId: 7 })).toBe(true);
-    expect(canLeaveShift(head, { residentId: null })).toBe(false);
+    const shift = { residentId: 7, date: "2026-11-12" };
+    expect(canLeaveShift(member, shift, today)).toBe(true);
+    expect(canLeaveShift(member, { ...shift, residentId: 6 }, today)).toBe(
+      false,
+    );
+    expect(canLeaveShift(head, shift, today)).toBe(true);
+    expect(canLeaveShift(head, { ...shift, residentId: null }, today)).toBe(
+      false,
+    );
   });
 });
 

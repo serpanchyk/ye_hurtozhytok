@@ -1,6 +1,6 @@
 import { eq, inArray } from "drizzle-orm";
 
-import type { Db } from "./db";
+import { inSlices, type Db } from "./db";
 import { residents, taskAssignees } from "./db/schema";
 import { byName } from "./names";
 
@@ -13,16 +13,18 @@ export async function assigneesOf(
 ): Promise<Map<number, Person[]>> {
   const result = new Map<number, Person[]>(taskIds.map((id) => [id, []]));
   if (taskIds.length === 0) return result;
-  const rows = await db
-    .select({
-      taskId: taskAssignees.taskId,
-      id: residents.id,
-      name: residents.name,
-    })
-    .from(taskAssignees)
-    .innerJoin(residents, eq(residents.id, taskAssignees.residentId))
-    .where(inArray(taskAssignees.taskId, taskIds))
-    .all();
+  const rows = await inSlices(taskIds, (slice) =>
+    db
+      .select({
+        taskId: taskAssignees.taskId,
+        id: residents.id,
+        name: residents.name,
+      })
+      .from(taskAssignees)
+      .innerJoin(residents, eq(residents.id, taskAssignees.residentId))
+      .where(inArray(taskAssignees.taskId, slice))
+      .all(),
+  );
   for (const { taskId, ...person } of rows) result.get(taskId)?.push(person);
   for (const people of result.values()) people.sort(byName);
   return result;
