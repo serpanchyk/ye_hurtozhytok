@@ -1,6 +1,6 @@
 import { Form, Link, data, redirect, useNavigation } from "react-router";
 
-import { AvatarStack, Credit, Icon, TopBar } from "~/components/ui";
+import { Credit, Icon, TopBar } from "~/components/ui";
 import { requireProfile } from "~/lib/auth.server";
 import { isSquad } from "~/lib/permissions";
 import { weekPatrols } from "~/lib/patrols.server";
@@ -188,7 +188,9 @@ export default function Schedule({
               )}
               {d.patrols.map((p) => (
                 <div className="list-row" key={p.id}>
-                  <AvatarStack names={p.people} />
+                  <span className="who-av">
+                    <Icon name="walk" small />
+                  </span>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <b>{p.planned ? "Обхід · плануємо" : "Обхід"}</b>
                     <span className="sub clamp">{p.people.join(", ")}</span>
@@ -223,7 +225,7 @@ export default function Schedule({
           className="btn btn-soft block"
           to="/work/patrols/new"
         >
-          <Icon name="pin" />
+          <Icon name="walk" />
           Обхід
         </Link>
       </div>
