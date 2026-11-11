@@ -7,7 +7,6 @@ import { canPublishAnnouncements } from "~/lib/permissions";
 import { kyivDateKey, kyivNow } from "~/lib/time";
 import type { Route } from "./+types/announcements-review";
 
-export const handle = { tab: "services" };
 export const meta: Route.MetaFunction = () => [
   { title: "Пропозиції оголошень · єГуртожиток" },
 ];
@@ -41,7 +40,12 @@ export default function Review({ loaderData }: Route.ComponentProps) {
       {list.length ? (
         <div className="ann-list">
           {list.map((a) => (
-            <AnnouncementRow a={{ ...a, date: null }} sub={a.sub} key={a.id} />
+            <AnnouncementRow
+              a={{ ...a, date: null }}
+              sub={a.sub}
+              to={`/work/announcements/${a.id}`}
+              key={a.id}
+            />
           ))}
         </div>
       ) : (

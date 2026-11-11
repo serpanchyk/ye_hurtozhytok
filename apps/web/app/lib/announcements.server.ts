@@ -6,13 +6,14 @@ import {
   MAX_PROPOSALS_PER_DAY,
   MAX_IMAGE_BYTES,
   REASON_MAX,
+  agoLabel,
   parseAnnouncementForm,
   whenLabel,
   type AnnouncementErrors,
 } from "./announcements";
 import { activity, getDb } from "./db";
 import { detectImageType, stripMetadata, type ImageType } from "./images";
-import { markdownExcerpt } from "./markdown.server";
+import { markdownExcerpt, renderMarkdown } from "./markdown.server";
 import {
   announcementImages,
   announcements,
@@ -29,7 +30,7 @@ import {
   type Actor,
 } from "./permissions";
 import { drainOutbox, enqueueBroadcast, notify } from "./push.server";
-import { kyivNow } from "./time";
+import { kyivDateKey, kyivNow } from "./time";
 
 type Ctx = { waitUntil(promise: Promise<unknown>): void };
 
@@ -201,6 +202,43 @@ export async function getAnnouncement(env: Env, actor: Actor, id: number) {
     canDecide: a.status === "pending" && canPublishAnnouncements(actor),
   };
 }
+
+/**
+ * An announcement as its page shows it, the same on the public page and in
+ * «Праця»: details rendered from Markdown, dates as words. Null when it may
+ * not be seen.
+ */
+export async function announcementPage(env: Env, actor: Actor, id: number) {
+  const a = await getAnnouncement(env, actor, id);
+  if (!a) return null;
+  const today = kyivNow().date;
+  return {
+    today,
+    mine: a.authorId === actor.id,
+    canDecide: a.canDecide,
+    canEdit: a.canEdit,
+    a: {
+      id: a.id,
+      title: a.title,
+      bodyHtml: a.body ? renderMarkdown(a.body) : null,
+      place: a.place,
+      date: a.date,
+      startMin: a.startMin,
+      important: a.important,
+      status: a.status,
+      rejectReason: a.rejectReason,
+      images: a.images,
+      author: a.author,
+      published: a.publishedAt
+        ? agoLabel(kyivDateKey(a.publishedAt), today)
+        : null,
+      decidedByName: a.decidedByName,
+    },
+  };
+}
+export type AnnouncementPage = NonNullable<
+  Awaited<ReturnType<typeof announcementPage>>
+>;
 
 type Picture = { bytes: Uint8Array; type: ImageType };
 
@@ -423,7 +461,7 @@ export async function createAnnouncement(
             {
               title: "Нова пропозиція оголошення",
               body: a.title,
-              url: `/announcements/${a.id}`,
+              url: `/work/announcements/${a.id}`,
             },
           ),
         )

@@ -1,6 +1,9 @@
 import { Link } from "react-router";
 
+import { Gallery } from "~/components/gallery";
+import { ShareButton } from "~/components/share-button";
 import { Icon } from "~/components/ui";
+import type { AnnouncementPage } from "~/lib/announcements.server";
 import { fmtTime, whenLabel } from "~/lib/announcements";
 import {
   MONTHS_SHORT,
@@ -95,17 +98,16 @@ export function ImportantCard({ a, today }: { a: Item; today: string }) {
 export function AnnouncementRow({
   a,
   sub,
+  to = `/announcements/${a.id}`,
 }: {
   a: Item;
   /** What the second line says for undated news, e.g. «вчора». */
   sub?: string;
+  /** Where the row leads; «Праця» opens its own page. */
+  to?: string;
 }) {
   return (
-    <Link
-      viewTransition
-      className="glass ann-row"
-      to={`/announcements/${a.id}`}
-    >
+    <Link viewTransition className="glass ann-row" to={to}>
       {a.date ? <CalendarLeaf date={a.date} /> : null}
       <span className="ann-row-text">
         <b>{a.title}</b>
@@ -145,5 +147,76 @@ export function AnnouncementRow({
         />
       )}
     </Link>
+  );
+}
+
+/**
+ * An announcement's page body, the same on the public page and in «Праця»:
+ * pictures, the text, sharing once published, the reason if turned down.
+ */
+export function AnnouncementView({
+  a,
+  today,
+}: {
+  a: AnnouncementPage["a"];
+  today: string;
+}) {
+  const when = whenLabel(a.date, null, today);
+  return (
+    <>
+      <Gallery images={a.images} />
+
+      <article className="glass ann-detail">
+        <div className="ann-detail-top">
+          {a.important && (
+            <span className="ann-flag">
+              <Icon name="bell" small />
+              Важливе
+            </span>
+          )}
+          <StatusPill status={a.status} />
+        </div>
+        <h2>{a.title}</h2>
+        {(a.date || a.place) && (
+          <div className="ann-when">
+            {a.startMin !== null && (
+              <span className="t">{fmtTime(a.startMin)}</span>
+            )}
+            <span className="d">
+              {when && <b>{when}</b>}
+              {a.place && <span>{a.place}</span>}
+            </span>
+          </div>
+        )}
+        {a.bodyHtml && (
+          <div
+            className="ann-body rich"
+            // Rendered on the server from Markdown; people's HTML stays text.
+            dangerouslySetInnerHTML={{ __html: a.bodyHtml }}
+          />
+        )}
+        <p className="ann-by">
+          {a.status === "published"
+            ? `Опубліковано ${a.published}`
+            : a.status === "pending"
+              ? "Пропозиція чекає рішення студради"
+              : "Не опубліковано"}
+          {" · автор: "}
+          {a.author}
+        </p>
+      </article>
+
+      {a.status === "published" && (
+        <ShareButton title={a.title} path={`/announcements/${a.id}`} />
+      )}
+
+      {a.status === "rejected" && a.rejectReason && (
+        <div className="glass reason">
+          <b>Чому не опубліковано</b>
+          <p>{a.rejectReason}</p>
+          {a.decidedByName && <small>Рішення: {a.decidedByName}</small>}
+        </div>
+      )}
+    </>
   );
 }

@@ -6,7 +6,6 @@ import { requireProfile } from "~/lib/auth.server";
 import { getTask, updateTask } from "~/lib/tasks.server";
 import type { Route } from "./+types/work-task-edit";
 
-export const handle = { tab: "services" };
 export const meta: Route.MetaFunction = () => [
   { title: "Змінити картку · єГуртожиток" },
 ];

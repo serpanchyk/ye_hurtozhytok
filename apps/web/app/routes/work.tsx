@@ -12,7 +12,6 @@ import {
 } from "~/lib/permissions";
 import type { Route } from "./+types/work";
 
-export const handle = { tab: "services" };
 export const meta: Route.MetaFunction = () => [
   { title: "Праця · єГуртожиток" },
 ];
@@ -84,14 +83,14 @@ export default function Work({ loaderData }: Route.ComponentProps) {
               sub="Усі картки, приватні теж"
             />
             <LinkRow
-              to="/announcements/review"
+              to="/work/announcements/review"
               icon="horn"
               title="Пропозиції оголошень"
               sub={pending ? "Чекають рішення" : "Нових немає"}
               count={pending}
             />
             <LinkRow
-              to="/announcements/new"
+              to="/work/announcements/new"
               icon="plus"
               title="Нове оголошення"
               sub="Одразу для всіх"

@@ -8,6 +8,7 @@ import {
 } from "~/lib/announcements.server";
 import { requireProfile } from "~/lib/auth.server";
 import { canPublishAnnouncements } from "~/lib/permissions";
+import { inWork } from "~/lib/sections";
 import { kyivNow } from "~/lib/time";
 import type { Route } from "./+types/announcement-edit";
 
@@ -22,7 +23,13 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const a = await getAnnouncement(env, me, Number(params.id));
   if (!a || !a.canEdit)
     throw new Response("Це оголошення змінити не можна.", { status: 403 });
+  // Those who publish change announcements in «Праця»; the author changes a
+  // proposal of their own on its public page.
+  const work = canPublishAnnouncements(me);
+  if (work !== inWork(new URL(request.url).pathname))
+    throw redirect(`${work ? "/work" : ""}/announcements/${a.id}/edit`);
   return {
+    base: work ? "/work/announcements" : "/announcements",
     id: a.id,
     canPublish: canPublishAnnouncements(me),
     today: kyivNow().date,
@@ -52,17 +59,18 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   if (!result)
     throw new Response("Це оголошення змінити не можна.", { status: 403 });
   if (!result.ok) return data({ errors: result.errors }, { status: 400 });
-  throw redirect(`/announcements/${id}`);
+  const base = inWork(new URL(request.url).pathname) ? "/work" : "";
+  throw redirect(`${base}/announcements/${id}`);
 }
 
 export default function EditAnnouncement({
   loaderData,
   actionData,
 }: Route.ComponentProps) {
-  const { id, canPublish, initial, today } = loaderData;
+  const { base, id, canPublish, initial, today } = loaderData;
   return (
     <>
-      <TopBar back={`/announcements/${id}`} title="Змінити оголошення" />
+      <TopBar back={`${base}/${id}`} title="Змінити оголошення" />
       <AnnouncementForm
         today={today}
         initial={initial}

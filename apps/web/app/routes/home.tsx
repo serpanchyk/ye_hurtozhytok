@@ -60,7 +60,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <Link
           viewTransition
           className="glass list-row attention"
-          to="/announcements/review"
+          to="/work/announcements/review"
         >
           <span className="who-av">
             <Icon name="horn" small />
@@ -113,14 +113,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       </div>
 
       <div className="home-actions">
-        {p.canPropose && (
+        {/* Those who publish post from «Праця»; residents propose here. */}
+        {p.canPropose && !p.decider && (
           <Link
             viewTransition
             className="btn btn-soft block"
             to="/announcements/new"
           >
             <Icon name="plus" />
-            {p.decider ? "Нове оголошення" : "Запропонувати оголошення"}
+            Запропонувати оголошення
           </Link>
         )}
         <Link viewTransition className="history" to="/announcements">

@@ -25,7 +25,7 @@ import { useCardDrag } from "~/lib/use-card-drag";
 import { usePolling } from "~/lib/use-polling";
 import type { Route } from "./+types/work-board";
 
-export const handle = { tab: "services", wide: true };
+export const handle = { wide: true };
 export const meta: Route.MetaFunction = () => [
   { title: "Робоча дошка · єГуртожиток" },
 ];

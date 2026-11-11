@@ -16,3 +16,8 @@ export const SECTIONS = [
 }[];
 
 export type Tab = (typeof SECTIONS)[number]["id"] | null;
+
+/** «Праця» lives at /work; its pages belong to «Послуги». */
+export function inWork(pathname: string): boolean {
+  return pathname === "/work" || pathname.startsWith("/work/");
+}

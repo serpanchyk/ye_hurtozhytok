@@ -8,6 +8,7 @@ import {
   canProposeAnnouncement,
   canPublishAnnouncements,
 } from "~/lib/permissions";
+import { inWork } from "~/lib/sections";
 import { kyivNow } from "~/lib/time";
 import type { Route } from "./+types/announcement-new";
 
@@ -16,11 +17,18 @@ export const meta: Route.MetaFunction = () => [
   { title: "Нове оголошення · єГуртожиток" },
 ];
 
+// The same page proposes (/announcements/new) and, in «Праця», publishes
+// at once (/work/announcements/new); each person is sent to their own.
 export async function loader({ request, context }: Route.LoaderArgs) {
   const me = await requireProfile(request, context.cloudflare.env);
   if (!canProposeAnnouncement(me))
     throw new Response("Ваш акаунт заблоковано.", { status: 403 });
-  return { canPublish: canPublishAnnouncements(me), today: kyivNow().date };
+  const canPublish = canPublishAnnouncements(me);
+  if (canPublish !== inWork(new URL(request.url).pathname))
+    throw redirect(
+      canPublish ? "/work/announcements/new" : "/announcements/new",
+    );
+  return { canPublish, today: kyivNow().date };
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -46,7 +54,7 @@ export default function NewAnnouncement({
   return (
     <>
       <TopBar
-        back="/"
+        back={canPublish ? "/work" : "/"}
         title={canPublish ? "Нове оголошення" : "Запропонувати оголошення"}
       />
       {!canPublish && (

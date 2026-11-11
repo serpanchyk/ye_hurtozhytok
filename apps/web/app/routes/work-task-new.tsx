@@ -8,7 +8,6 @@ import { BOARD_LABELS, defaultPublic, isBoard, type Board } from "~/lib/tasks";
 import { createTask } from "~/lib/tasks.server";
 import type { Route } from "./+types/work-task-new";
 
-export const handle = { tab: "services" };
 export const meta: Route.MetaFunction = () => [
   { title: "Нова картка · єГуртожиток" },
 ];

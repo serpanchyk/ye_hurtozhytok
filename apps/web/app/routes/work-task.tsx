@@ -25,7 +25,6 @@ import {
 import { kyivDateKey, kyivNow } from "~/lib/time";
 import type { Route } from "./+types/work-task";
 
-export const handle = { tab: "services" };
 export const meta: Route.MetaFunction = ({ data }) => [
   { title: `${data?.task.title ?? "Картка"} · єГуртожиток` },
 ];

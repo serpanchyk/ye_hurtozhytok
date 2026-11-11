@@ -1,19 +1,14 @@
-import { Form, Link, data, redirect, useNavigation } from "react-router";
+import { Form, Link, data, redirect } from "react-router";
 
-import { StatusPill } from "~/components/announcement";
-import { Check, ConfirmButton } from "~/components/controls";
-import { Gallery } from "~/components/gallery";
-import { ShareButton } from "~/components/share-button";
+import { AnnouncementView } from "~/components/announcement";
+import { ConfirmButton } from "~/components/controls";
 import { Credit, Icon, TopBar } from "~/components/ui";
-import { REASON_MAX, agoLabel, fmtTime, whenLabel } from "~/lib/announcements";
 import {
-  decideAnnouncement,
+  announcementPage,
   deleteAnnouncement,
-  getAnnouncement,
 } from "~/lib/announcements.server";
 import { requireProfile } from "~/lib/auth.server";
-import { renderMarkdown } from "~/lib/markdown.server";
-import { kyivDateKey, kyivNow } from "~/lib/time";
+import { canPublishAnnouncements } from "~/lib/permissions";
 import { skipForPhotoViewer } from "~/lib/revalidate";
 import type { Route } from "./+types/announcement";
 
@@ -27,63 +22,41 @@ export const shouldRevalidate = skipForPhotoViewer;
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const me = await requireProfile(request, env);
-  const a = await getAnnouncement(env, me, Number(params.id));
-  if (!a)
+  const page = await announcementPage(env, me, Number(params.id));
+  if (!page)
     throw new Response("Такого оголошення немає або воно не для вас.", {
       status: 404,
     });
-  const today = kyivNow().date;
-  const url = new URL(request.url);
   return {
-    today,
-    mine: a.authorId === me.id,
-    sent: url.searchParams.get("sent") === "1",
-    a: {
-      id: a.id,
-      title: a.title,
-      bodyHtml: a.body ? renderMarkdown(a.body) : null,
-      place: a.place,
-      date: a.date,
-      startMin: a.startMin,
-      important: a.important,
-      status: a.status,
-      rejectReason: a.rejectReason,
-      images: a.images,
-      author: a.author,
-      published: a.publishedAt
-        ? agoLabel(kyivDateKey(a.publishedAt), today)
-        : null,
-      decidedByName: a.decidedByName,
-      canEdit: a.canEdit,
-      canDecide: a.canDecide,
-    },
+    ...page,
+    // The author changes or withdraws their own proposal here; everything
+    // else people with the right do in «Праця».
+    ownProposal: page.mine && page.a.status === "pending",
+    decider: canPublishAnnouncements(me),
+    sent: new URL(request.url).searchParams.get("sent") === "1",
   };
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
-  const { env, ctx } = context.cloudflare;
+  const env = context.cloudflare.env;
   const me = await requireProfile(request, env);
   const id = Number(params.id);
   const form = await request.formData();
-  const intent = form.get("intent");
-  if (intent === "delete") {
-    const ok = await deleteAnnouncement(env, me, id);
-    if (!ok) return data({ error: "Видалити не вдалося." }, { status: 403 });
-    throw redirect("/");
-  }
-  const result = await decideAnnouncement(env, ctx, me, id, form);
-  if (!result.ok) return data({ error: result.error }, { status: 400 });
-  return { decided: result.status };
+  const page = await announcementPage(env, me, id);
+  const own = page?.mine && page.a.status === "pending";
+  if (form.get("intent") !== "delete" || !own)
+    return data({ error: "Так зробити не можна." }, { status: 403 });
+  if (!(await deleteAnnouncement(env, me, id)))
+    return data({ error: "Забрати не вдалося." }, { status: 403 });
+  throw redirect("/");
 }
 
+/** An announcement to read; its author manages a proposal still under review. */
 export default function AnnouncementPage({
   loaderData,
   actionData,
 }: Route.ComponentProps) {
-  const { a, today, mine, sent } = loaderData;
-  const navigation = useNavigation();
-  const busy = navigation.state === "submitting";
-  const when = whenLabel(a.date, null, today);
+  const { a, today, ownProposal, decider, sent } = loaderData;
   return (
     <>
       <TopBar back="/" title="Оголошення" />
@@ -93,124 +66,15 @@ export default function AnnouncementPage({
           Надіслано на розгляд. Коли студрада вирішить, прийде сповіщення.
         </p>
       )}
-      {actionData && "decided" in actionData && (
-        <p className="ok-note" role="status">
-          {actionData.decided === "published"
-            ? "Опубліковано."
-            : "Відхилено, автор побачить пояснення."}
-        </p>
-      )}
       {actionData && "error" in actionData && (
         <p className="error-note" role="alert">
           {actionData.error}
         </p>
       )}
 
-      <Gallery images={a.images} />
+      <AnnouncementView a={a} today={today} />
 
-      <article className="glass ann-detail">
-        <div className="ann-detail-top">
-          {a.important && (
-            <span className="ann-flag">
-              <Icon name="bell" small />
-              Важливе
-            </span>
-          )}
-          <StatusPill status={a.status} />
-        </div>
-        <h2>{a.title}</h2>
-        {(a.date || a.place) && (
-          <div className="ann-when">
-            {a.startMin !== null && (
-              <span className="t">{fmtTime(a.startMin)}</span>
-            )}
-            <span className="d">
-              {when && <b>{when}</b>}
-              {a.place && <span>{a.place}</span>}
-            </span>
-          </div>
-        )}
-        {a.bodyHtml && (
-          <div
-            className="ann-body rich"
-            // Rendered on the server from Markdown; people's HTML stays text.
-            dangerouslySetInnerHTML={{ __html: a.bodyHtml }}
-          />
-        )}
-        <p className="ann-by">
-          {a.status === "published"
-            ? `Опубліковано ${a.published}`
-            : a.status === "pending"
-              ? "Пропозиція чекає рішення студради"
-              : "Не опубліковано"}
-          {" · автор: "}
-          {a.author}
-        </p>
-      </article>
-
-      {a.status === "published" && (
-        <ShareButton title={a.title} path={`/announcements/${a.id}`} />
-      )}
-
-      {a.status === "rejected" && a.rejectReason && (
-        <div className="glass reason">
-          <b>Чому не опубліковано</b>
-          <p>{a.rejectReason}</p>
-          {a.decidedByName && <small>Рішення: {a.decidedByName}</small>}
-        </div>
-      )}
-
-      {a.canDecide && (
-        <section className="decide">
-          <div className="section-h">
-            <h3>Рішення</h3>
-          </div>
-          <Form method="post" className="glass form">
-            <Check
-              name="important"
-              title="Важливе"
-              hint="Зверху на головній і сповіщення всім, хто їх увімкнув."
-            />
-            <button
-              className="btn btn-primary block"
-              type="submit"
-              name="intent"
-              value="publish"
-              disabled={busy}
-            >
-              Опублікувати
-            </button>
-          </Form>
-          <details className="glass reject">
-            <summary>Відхилити з поясненням</summary>
-            <Form method="post" className="form">
-              <div className="field-row">
-                <label htmlFor="reason">Що написати автору</label>
-                <textarea
-                  id="reason"
-                  name="reason"
-                  className="area"
-                  rows={3}
-                  maxLength={REASON_MAX}
-                  required
-                  placeholder="Наприклад: таке оголошення вже є, або бракує дати."
-                />
-              </div>
-              <button
-                className="btn btn-soft block"
-                type="submit"
-                name="intent"
-                value="reject"
-                disabled={busy}
-              >
-                Відхилити
-              </button>
-            </Form>
-          </details>
-        </section>
-      )}
-
-      {a.canEdit && (
+      {ownProposal && (
         <div className="ann-actions">
           <Link
             viewTransition
@@ -225,20 +89,24 @@ export default function AnnouncementPage({
               className="btn btn-ghost-danger block"
               name="intent"
               value="delete"
-              question={
-                mine && a.status === "pending"
-                  ? "Забрати цю пропозицію?"
-                  : "Видалити оголошення? Його більше ніхто не побачить."
-              }
-              yes={
-                mine && a.status === "pending"
-                  ? "Так, забрати"
-                  : "Так, видалити"
-              }
+              question="Забрати цю пропозицію?"
+              yes="Так, забрати"
             >
-              {mine && a.status === "pending" ? "Забрати" : "Видалити"}
+              Забрати
             </ConfirmButton>
           </Form>
+        </div>
+      )}
+      {decider && (
+        <div className="home-actions">
+          <Link
+            viewTransition
+            className="btn btn-soft block"
+            to={`/work/announcements/${a.id}`}
+          >
+            <Icon name="work" small />
+            Відкрити в «Праці»
+          </Link>
         </div>
       )}
       <Credit />

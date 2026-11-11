@@ -8,6 +8,7 @@ import {
   requireProfile,
 } from "~/lib/auth.server";
 import { useNavDirection } from "~/lib/nav-direction";
+import { inWork } from "~/lib/sections";
 import { skipForPhotoViewer } from "~/lib/revalidate";
 import type { Route } from "./+types/app-layout";
 
@@ -26,14 +27,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export default function AppLayout({ loaderData }: Route.ComponentProps) {
   useNavDirection();
   const matches = useMatches();
-  const handle = matches.at(-1)?.handle as
+  const last = matches.at(-1);
+  const handle = last?.handle as
     { tab?: Tab; sheet?: boolean; wide?: boolean } | undefined;
+  const tab = last && inWork(last.pathname) ? "services" : handle?.tab;
   return (
     <>
       <main className={handle?.wide ? "page wide" : "page"}>
         <Outlet />
       </main>
-      {!handle?.sheet && <TabBar active={handle?.tab ?? null} />}
+      {!handle?.sheet && <TabBar active={tab ?? null} />}
       {loaderData.dev && (
         <DevSwitcher people={loaderData.dev} me={loaderData.resident.id} />
       )}
