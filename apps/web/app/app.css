@@ -3907,21 +3907,11 @@ html:not(.booted) .ticket::after,
   user-select: all;
 }
 
-.list-row b.stat-total,
 .stat-total {
-  display: grid;
-  justify-items: end;
-  line-height: 1.1;
   font-family: var(--font-display);
   font-weight: 900;
   font-size: 22px;
   font-feature-settings: "tnum";
-}
-.stat-total small {
-  font-family: var(--font);
-  font-weight: 500;
-  font-size: 11.5px;
-  color: var(--faint);
 }
 
 /* ---------- task boards ---------- */

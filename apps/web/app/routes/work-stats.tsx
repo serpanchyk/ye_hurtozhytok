@@ -51,10 +51,7 @@ export default function Stats({ loaderData }: Route.ComponentProps) {
                 з 1 {month}: {r.month}
               </span>
             </span>
-            <b className="stat-total">
-              {r.total}
-              <small>усього</small>
-            </b>
+            <b className="stat-total">{r.total}</b>
           </div>
         ))}
       </div>
