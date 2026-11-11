@@ -14,6 +14,7 @@ import { requireProfile } from "~/lib/auth.server";
 import {
   canBlock,
   canManageRoles,
+  canSeeResidents,
   canRevokeRole,
   isCouncil,
 } from "~/lib/permissions";
@@ -23,6 +24,7 @@ import { searchFrom } from "~/lib/search-params";
 import { ROLES, ROLE_LABELS, type Role } from "~/lib/roles";
 import { setBlocked } from "~/lib/residents.server";
 import { listPeople, setRoles } from "~/lib/roles.server";
+import { sectionBack } from "~/lib/work-section.server";
 import type { Route } from "./+types/residents";
 
 export const handle = { tab: "services" };
@@ -61,8 +63,8 @@ function matches(f: FilterId, roles: readonly Role[]) {
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const me = await requireProfile(request, env);
-  if (!isCouncil(me))
-    throw new Response("Ця сторінка для студради й розпорядника.", {
+  if (!canSeeResidents(me))
+    throw new Response("Ця сторінка для студради, оперзагону й розпорядника.", {
       status: 403,
     });
   const manage = canManageRoles(me);
@@ -70,8 +72,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const signedIn = people.filter((p) => p.residentId !== null);
   return {
     manage,
-    // The site manager comes from their own section, the council from its.
-    back: manage ? "/work?s=manager" : "/work?s=council",
+    back: await sectionBack(request, me, ["council", "squad", "manager"]),
+    // The council may cancel anyone's booking; the squad only looks.
+    cancels: isCouncil(me),
     stats: [
       { label: "зареєстровано", value: signedIn.length },
       {
@@ -241,7 +244,9 @@ export default function Residents({
       <p className="lede" style={{ margin: "0 4px 14px" }}>
         {loaderData.manage
           ? "Кожен, хто увійшов через пошту Політехніки, — мешканець; роль лише додає права. Відкрийте людину, щоб змінити ролі чи заблокувати."
-          : "Хто зареєструвався й де живе. Записи будь-кого можна скасувати на сторінці пралки."}
+          : loaderData.cancels
+            ? "Хто зареєструвався й де живе. Записи будь-кого можна скасувати на сторінці пралки."
+            : "Хто зареєструвався й де живе."}
       </p>
       <dl className="glass council-stats">
         {loaderData.stats.map((x) => (

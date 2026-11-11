@@ -21,13 +21,13 @@ export type Tab = (typeof SECTIONS)[number]["id"] | null;
 
 /**
  * The work sections, each its own tile on «Послуги»: the council's, the
- * squad's and the site manager's. Their pages live under /work and belong
- * to «Послуги» in the menu.
+ * squad's and the site manager's («Управа»). Their pages live under /work
+ * and belong to «Послуги» in the menu.
  */
 export const WORK_SECTIONS = [
   { id: "council", label: "Студрада", icon: "work" },
   { id: "squad", label: "Оперзагін", icon: "shield" },
-  { id: "manager", label: "Розпорядник", icon: "user" },
+  { id: "manager", label: "Управа", icon: "user" },
 ] as const satisfies readonly { id: string; label: string; icon: IconName }[];
 export type WorkSection = (typeof WORK_SECTIONS)[number]["id"];
 

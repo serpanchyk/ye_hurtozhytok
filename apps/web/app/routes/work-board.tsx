@@ -129,6 +129,14 @@ export default function WorkBoard({ loaderData }: Route.ComponentProps) {
         Усі картки, приватні теж. Утримайте картку, щоб перетягнути її в іншу
         колонку.
       </p>
+      <Link
+        viewTransition
+        className="btn btn-soft block board-new"
+        to={`/work/tasks/new?b=${board}`}
+      >
+        <Icon name="plus" />
+        Нова картка
+      </Link>
 
       {moved && (
         <p className="ok-note" role="status">
@@ -172,17 +180,6 @@ export default function WorkBoard({ loaderData }: Route.ComponentProps) {
         landed={landed}
         innerRef={colsRef}
       />
-
-      <div className="home-actions">
-        <Link
-          viewTransition
-          className="btn btn-soft block"
-          to={`/work/tasks/new?b=${board}`}
-        >
-          <Icon name="plus" />
-          Нова картка
-        </Link>
-      </div>
       <Credit />
     </>
   );

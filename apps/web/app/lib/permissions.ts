@@ -63,6 +63,11 @@ export function canBlock(
   );
 }
 
+/** Who signed up and where they live: the council, the squad, the site manager. */
+export function canSeeResidents(actor: WithRoles): boolean {
+  return isCouncil(actor) || isSquad(actor);
+}
+
 /** Only the site manager hands out and takes away roles. */
 export function canManageRoles(actor: Actor): boolean {
   return isSiteManager(actor);
@@ -95,8 +100,16 @@ export function canProposeAnnouncement(actor: Actor): boolean {
   return !actor.blocked;
 }
 
-/** The council and the site manager publish without review and decide on proposals. */
+/** The council, the squad and the site manager publish without review. */
 export function canPublishAnnouncements(actor: Actor): boolean {
+  return !actor.blocked && (isCouncil(actor) || isSquad(actor));
+}
+
+/**
+ * The council and the site manager decide on proposals and change or remove
+ * anyone's announcement.
+ */
+export function canDecideAnnouncements(actor: Actor): boolean {
   return !actor.blocked && isCouncil(actor);
 }
 
@@ -107,14 +120,18 @@ export function canPublishAnnouncements(actor: Actor): boolean {
 export function canSeeAnnouncement(actor: Actor, a: AnnouncementRef): boolean {
   if (a.deletedAt !== null) return false;
   if (a.status === "published") return a.audience === "all" || isSquad(actor);
-  return a.authorId === actor.id || canPublishAnnouncements(actor);
+  return a.authorId === actor.id || canDecideAnnouncements(actor);
 }
 
-/** Deciders edit and remove any; the author only their own proposal still under review. */
+/**
+ * Deciders edit and remove any; those who publish their own; everyone else
+ * only their own proposal still under review.
+ */
 export function canEditAnnouncement(actor: Actor, a: AnnouncementRef): boolean {
   if (a.deletedAt !== null) return false;
-  if (canPublishAnnouncements(actor)) return true;
-  return !actor.blocked && a.authorId === actor.id && a.status === "pending";
+  if (canDecideAnnouncements(actor)) return true;
+  if (actor.blocked || a.authorId !== actor.id) return false;
+  return a.status === "pending" || canPublishAnnouncements(actor);
 }
 
 type TaskRef = {
@@ -182,6 +199,11 @@ export function canSeeComplaint(
 export function leadsSquad(actor: WithRoles): boolean {
   if (actor.blocked) return false;
   return actor.roles.includes("squad_head") || isSiteManager(actor);
+}
+
+/** The squad's Excel (shifts, patrols, cards, people, the log) is the site manager's. */
+export function canExportSquad(actor: WithRoles): boolean {
+  return isSiteManager(actor);
 }
 
 /** Everyone in the squad stands duty. */

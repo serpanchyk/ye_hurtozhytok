@@ -4,11 +4,14 @@ import {
   canBlock,
   canEditAnnouncement,
   canProposeAnnouncement,
+  canDecideAnnouncements,
   canPublishAnnouncements,
   canSeeAnnouncement,
+  canSeeResidents,
   canBook,
   canCancel,
   canDeleteTask,
+  canExportSquad,
   canManageBoard,
   canSeeTask,
   canManageRoles,
@@ -123,15 +126,22 @@ describe("permissions", () => {
         false,
       );
     });
-    it("lets the council and the site manager publish", () => {
+    it("lets the council, the squad and the site manager publish", () => {
       expect(canPublishAnnouncements(council)).toBe(true);
       expect(canPublishAnnouncements(head)).toBe(true);
       expect(canPublishAnnouncements(manager)).toBe(true);
-      expect(canPublishAnnouncements(squad)).toBe(false);
+      expect(canPublishAnnouncements(squad)).toBe(true);
       expect(canPublishAnnouncements(resident)).toBe(false);
       expect(canPublishAnnouncements({ ...council, blocked: true })).toBe(
         false,
       );
+    });
+    it("leaves proposals to the council and the site manager", () => {
+      expect(canDecideAnnouncements(council)).toBe(true);
+      expect(canDecideAnnouncements(manager)).toBe(true);
+      expect(canDecideAnnouncements(squad)).toBe(false);
+      expect(canDecideAnnouncements(resident)).toBe(false);
+      expect(canSeeAnnouncement(squad, pending)).toBe(false);
     });
     it("shows a proposal only to its author and the deciders", () => {
       expect(canSeeAnnouncement(resident, pending)).toBe(true);
@@ -153,6 +163,12 @@ describe("permissions", () => {
       expect(canEditAnnouncement(resident, published)).toBe(false);
       expect(canEditAnnouncement(other, pending)).toBe(false);
       expect(canEditAnnouncement(council, published)).toBe(true);
+    });
+    it("lets the squad change only its own published ones", () => {
+      expect(canEditAnnouncement(squad, published)).toBe(false);
+      expect(
+        canEditAnnouncement(squad, { ...published, authorId: squad.id }),
+      ).toBe(true);
     });
   });
 
@@ -195,6 +211,18 @@ describe("permissions", () => {
       expect(canDeleteTask({ ...squad, id: 99 }, squadCard)).toBe(false);
       expect(canDeleteTask(head, squadCard)).toBe(false);
       expect(canDeleteTask(head, councilCard)).toBe(true);
+    });
+    it("shows the residents to the council and the squad", () => {
+      expect(canSeeResidents(council)).toBe(true);
+      expect(canSeeResidents(squad)).toBe(true);
+      expect(canSeeResidents(manager)).toBe(true);
+      expect(canSeeResidents(resident)).toBe(false);
+      expect(canSeeResidents({ ...squad, blocked: true })).toBe(false);
+    });
+    it("leaves the squad's Excel to the site manager", () => {
+      expect(canExportSquad(manager)).toBe(true);
+      expect(canExportSquad(squadHead)).toBe(false);
+      expect(canExportSquad(squad)).toBe(false);
     });
   });
 });

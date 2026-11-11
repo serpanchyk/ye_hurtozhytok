@@ -12,6 +12,8 @@ import {
 import { requireProfile } from "~/lib/auth.server";
 import { canPublishAnnouncements } from "~/lib/permissions";
 import { skipForPhotoViewer } from "~/lib/revalidate";
+import type { WorkSection } from "~/lib/sections";
+import { sectionBack } from "~/lib/work-section.server";
 import type { Route } from "./+types/work-announcement";
 
 export const meta: Route.MetaFunction = ({ data }) => [
@@ -19,6 +21,9 @@ export const meta: Route.MetaFunction = ({ data }) => [
 ];
 
 export const shouldRevalidate = skipForPhotoViewer;
+
+// Every section that publishes may have opened it.
+const PUBLISHERS: WorkSection[] = ["council", "squad", "manager"];
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
@@ -28,7 +33,14 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   if (!canPublishAnnouncements(me)) throw redirect(`/announcements/${id}`);
   const page = await announcementPage(env, me, id);
   if (!page) throw new Response("Такого оголошення немає.", { status: 404 });
-  return page;
+  // Deciders manage any; the squad only its own.
+  if (!page.canEdit) throw redirect(`/announcements/${id}`);
+  return {
+    ...page,
+    back: page.canDecide
+      ? "/work/announcements/review"
+      : await sectionBack(request, me, PUBLISHERS),
+  };
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
@@ -40,7 +52,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const ok =
       canPublishAnnouncements(me) && (await deleteAnnouncement(env, me, id));
     if (!ok) return data({ error: "Видалити не вдалося." }, { status: 403 });
-    throw redirect("/work");
+    throw redirect(await sectionBack(request, me, PUBLISHERS));
   }
   const result = await decideAnnouncement(env, ctx, me, id, form);
   if (!result.ok) return data({ error: result.error }, { status: 400 });
@@ -52,14 +64,11 @@ export default function WorkAnnouncement({
   loaderData,
   actionData,
 }: Route.ComponentProps) {
-  const { a, today, canDecide } = loaderData;
+  const { a, today, canDecide, back } = loaderData;
   const busy = useNavigation().state === "submitting";
   return (
     <>
-      <TopBar
-        back={canDecide ? "/work/announcements/review" : "/work?s=council"}
-        title="Оголошення"
-      />
+      <TopBar back={back} title="Оголошення" />
 
       {actionData && "decided" in actionData && (
         <p className="ok-note" role="status">

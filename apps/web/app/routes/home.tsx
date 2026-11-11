@@ -22,7 +22,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const me = await requireProfile(request, env);
   const nowMs = Date.now();
   const today = kyivNow(nowMs).date;
-  const decider = canPublishAnnouncements(me);
   const list = await listPublished(env, me);
   const s = feedSections(list, today, nowMs);
   const ago = (ms: number | null) =>
@@ -31,7 +30,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     firstName: me.firstName ?? me.name.split(" ")[0],
     today,
     canPropose: canProposeAnnouncement(me),
-    decider,
+    publishes: canPublishAnnouncements(me),
     important: s.important,
     upcoming: s.upcoming,
     fresh: s.fresh.map((a) => ({ ...a, ago: ago(a.publishedAt) })),
@@ -92,7 +91,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
       <div className="home-actions">
         {/* Those who publish post from the work pages; residents propose here. */}
-        {p.canPropose && !p.decider && (
+        {p.canPropose && !p.publishes && (
           <Link
             viewTransition
             className="btn btn-soft block"

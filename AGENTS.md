@@ -60,7 +60,7 @@ docs in the same change.
 - Two worlds: public screens only show (plus a resident's own actions such as
   booking, proposing an announcement, writing a complaint); everything staff
   change lives under `/work`, one tile per role on «Послуги» («Студрада»,
-  «Оперзагін», «Розпорядник», from `WORK_SECTIONS`). Both are built from the same
+  «Оперзагін», «Управа», from `WORK_SECTIONS`). Both are built from the same
   components with different data and buttons.
 - Reuse before writing: an existing component, CSS class or animation is used
   or extracted, never copied. The bottom menu comes from `app/lib/sections.ts`

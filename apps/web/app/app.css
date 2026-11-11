@@ -3820,6 +3820,16 @@ html:not(.booted) .ticket::after,
   top: 14px;
   right: 14px;
 }
+/* Work sections sit apart under «Робота», dark like a chosen day. */
+.service-tile.is-work {
+  background: var(--ink);
+  color: #fff;
+  box-shadow: 0 10px 20px -10px rgb(16 18 23 / 0.55);
+}
+.service-tile.is-work .who-av {
+  background: rgb(255 255 255 / 0.12);
+  box-shadow: none;
+}
 
 /* ---------- a complaint: «Кому», then that recipient's topics ---------- */
 /* Radio labels as a segmented control: without JavaScript the checked one
@@ -3882,6 +3892,9 @@ html:not(.booted) .ticket::after,
   display: grid;
   gap: 8px;
 }
+.board-new {
+  margin-bottom: 14px;
+}
 /* A column is also a drop target: a little room around the cards for the highlight. */
 .board-col {
   margin: 0 -6px;
@@ -3943,14 +3956,16 @@ html.is-dragging * {
   .board-bar {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
+  .board-new {
+    max-width: 360px;
+  }
+  /* Side by side the columns run down to the bottom menu, so a card
+     drops anywhere in one, not only next to the cards already there. */
   .board-cols {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
-    align-items: start;
-  }
-  .board-cols + .home-actions {
-    max-width: 360px;
+    min-height: max(320px, calc(100dvh - 370px));
   }
 }
 

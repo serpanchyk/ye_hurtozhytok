@@ -23,6 +23,7 @@ import {
 import {
   canEditAnnouncement,
   canProposeAnnouncement,
+  canDecideAnnouncements,
   canPublishAnnouncements,
   canSeeAnnouncement,
   isSquad,
@@ -199,7 +200,7 @@ export async function getAnnouncement(env: Env, actor: Actor, id: number) {
     authorRoom: author?.room ?? null,
     decidedByName: decider?.name ?? null,
     canEdit: canEditAnnouncement(actor, a),
-    canDecide: a.status === "pending" && canPublishAnnouncements(actor),
+    canDecide: a.status === "pending" && canDecideAnnouncements(actor),
   };
 }
 
@@ -564,7 +565,7 @@ export async function decideAnnouncement(
   id: number,
   form: FormData,
 ): Promise<DecideResult> {
-  if (!canPublishAnnouncements(actor))
+  if (!canDecideAnnouncements(actor))
     return { ok: false, error: "Вирішувати можуть студрада й розпорядник." };
   const db = getDb(env);
   const publish = form.get("intent") === "publish";

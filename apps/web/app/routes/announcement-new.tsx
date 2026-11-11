@@ -10,6 +10,7 @@ import {
 } from "~/lib/permissions";
 import { inWork } from "~/lib/sections";
 import { kyivNow } from "~/lib/time";
+import { sectionBack } from "~/lib/work-section.server";
 import type { Route } from "./+types/announcement-new";
 
 export const handle = { tab: "home" };
@@ -28,7 +29,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     throw redirect(
       canPublish ? "/work/announcements/new" : "/announcements/new",
     );
-  return { canPublish, today: kyivNow().date };
+  return {
+    canPublish,
+    back: canPublish
+      ? await sectionBack(request, me, ["council", "squad", "manager"])
+      : "/",
+    today: kyivNow().date,
+  };
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -50,11 +57,11 @@ export default function NewAnnouncement({
   loaderData,
   actionData,
 }: Route.ComponentProps) {
-  const { canPublish, today } = loaderData;
+  const { canPublish, back, today } = loaderData;
   return (
     <>
       <TopBar
-        back={canPublish ? "/work?s=council" : "/"}
+        back={back}
         title={canPublish ? "Нове оголошення" : "Запропонувати оголошення"}
       />
       {!canPublish && (

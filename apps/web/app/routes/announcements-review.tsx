@@ -3,8 +3,9 @@ import { Credit, TopBar } from "~/components/ui";
 import { agoLabel } from "~/lib/announcements";
 import { listPending } from "~/lib/announcements.server";
 import { requireProfile } from "~/lib/auth.server";
-import { canPublishAnnouncements } from "~/lib/permissions";
+import { canDecideAnnouncements } from "~/lib/permissions";
 import { kyivDateKey, kyivNow } from "~/lib/time";
+import { sectionBack } from "~/lib/work-section.server";
 import type { Route } from "./+types/announcements-review";
 
 export const meta: Route.MetaFunction = () => [
@@ -14,13 +15,14 @@ export const meta: Route.MetaFunction = () => [
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const me = await requireProfile(request, env);
-  if (!canPublishAnnouncements(me))
+  if (!canDecideAnnouncements(me))
     throw new Response("Ця сторінка для студради й розпорядника.", {
       status: 403,
     });
   const today = kyivNow().date;
   const list = await listPending(env);
   return {
+    back: await sectionBack(request, me, ["council", "manager"]),
     list: list.map((a) => ({
       ...a,
       sub: `${a.author}${a.room ? `, ${a.room}` : ""} · ${agoLabel(kyivDateKey(a.createdAt), today)}`,
@@ -29,10 +31,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export default function Review({ loaderData }: Route.ComponentProps) {
-  const { list } = loaderData;
+  const { back, list } = loaderData;
   return (
     <>
-      <TopBar back="/work?s=council" title="Пропозиції оголошень" />
+      <TopBar back={back} title="Пропозиції оголошень" />
       <p className="lede" style={{ margin: "0 4px 14px" }}>
         Від мешканців. Відкрийте пропозицію, щоб опублікувати її або відхилити з
         поясненням для автора.

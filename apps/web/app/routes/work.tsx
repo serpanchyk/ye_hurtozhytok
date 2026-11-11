@@ -1,11 +1,12 @@
-import { Link, redirect } from "react-router";
+import { data, redirect } from "react-router";
 
 import { Credit, Icon, LinkRow, TopBar } from "~/components/ui";
 import { countPending } from "~/lib/announcements.server";
 import { listAppComplaints } from "~/lib/complaints.server";
 import { requireProfile } from "~/lib/auth.server";
-import { canPublishAnnouncements, leadsSquad } from "~/lib/permissions";
+import { canDecideAnnouncements, canExportSquad } from "~/lib/permissions";
 import { workSectionsFor } from "~/lib/sections";
+import { rememberSection } from "~/lib/work-section.server";
 import type { Route } from "./+types/work";
 
 export const meta: Route.MetaFunction = ({ data }) => [
@@ -21,21 +22,63 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const asked = new URL(request.url).searchParams.get("s");
   const found = mine.find((s) => s.id === asked) ?? mine[0];
   const section = found.id;
-  return {
-    leads: leadsSquad(me),
-    label: found.label,
-    section,
-    pending:
-      section === "council" && canPublishAnnouncements(me)
-        ? await countPending(env)
-        : 0,
-    appComplaints:
-      section === "manager" ? (await listAppComplaints(env)).length : 0,
-  };
+  return data(
+    {
+      label: found.label,
+      section,
+      exports: canExportSquad(me),
+      pending:
+        section !== "squad" && canDecideAnnouncements(me)
+          ? await countPending(env)
+          : 0,
+      appComplaints:
+        section === "manager" ? (await listAppComplaints(env)).length : 0,
+    },
+    // Pages several sections share lead back to this one.
+    { headers: { "Set-Cookie": await rememberSection(section) } },
+  );
+}
+
+/** The proposals and a new announcement: the council's and the site manager's rows. */
+function AnnouncementRows({ pending }: { pending: number }) {
+  return (
+    <>
+      <LinkRow
+        to="/work/announcements/review"
+        icon="horn"
+        title="Пропозиції оголошень"
+        sub={pending ? "Чекають рішення" : "Нових немає"}
+        count={pending}
+      />
+      <NewAnnouncementRow />
+    </>
+  );
+}
+
+function ResidentsRow() {
+  return (
+    <LinkRow
+      to="/residents"
+      icon="user"
+      title="Мешканці"
+      sub="Хто зареєструвався й де живе"
+    />
+  );
+}
+
+function NewAnnouncementRow() {
+  return (
+    <LinkRow
+      to="/work/announcements/new"
+      icon="plus"
+      title="Нове оголошення"
+      sub="Одразу для всіх"
+    />
+  );
 }
 
 export default function Work({ loaderData }: Route.ComponentProps) {
-  const { label, section, pending, appComplaints, leads } = loaderData;
+  const { label, section, pending, appComplaints, exports } = loaderData;
   return (
     <>
       <TopBar back="/services" />
@@ -52,25 +95,8 @@ export default function Work({ loaderData }: Route.ComponentProps) {
               title="Дошка студради"
               sub="Усі картки, приватні теж"
             />
-            <LinkRow
-              to="/work/announcements/review"
-              icon="horn"
-              title="Пропозиції оголошень"
-              sub={pending ? "Чекають рішення" : "Нових немає"}
-              count={pending}
-            />
-            <LinkRow
-              to="/work/announcements/new"
-              icon="plus"
-              title="Нове оголошення"
-              sub="Одразу для всіх"
-            />
-            <LinkRow
-              to="/residents"
-              icon="user"
-              title="Мешканці"
-              sub="Хто зареєструвався й де живе"
-            />
+            <AnnouncementRows pending={pending} />
+            <ResidentsRow />
           </>
         )}
         {section === "squad" && (
@@ -87,35 +113,19 @@ export default function Work({ loaderData }: Route.ComponentProps) {
               title="Хто скільки відсидів"
               sub="Минулі вахти кожного"
             />
-            {leads && (
-              <a className="list-row" href="/work/export" download>
-                <span className="who-av">
-                  <Icon name="cal" small />
-                </span>
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <b>Завантажити Excel</b>
-                  <span className="sub">
-                    Вахти, обходи, завдання, загін і журнал змін
-                  </span>
-                </span>
-              </a>
-            )}
             <LinkRow
               to="/work/board?b=squad"
               icon="board"
               title="Дошка загону"
               sub="Усі картки, приватні теж"
             />
-            <LinkRow
-              to="/work/tasks/new?b=squad"
-              icon="plus"
-              title="Нова картка"
-              sub="На дошку загону"
-            />
+            <NewAnnouncementRow />
+            <ResidentsRow />
           </>
         )}
         {section === "manager" && (
           <>
+            <AnnouncementRows pending={pending} />
             <LinkRow
               to="/residents"
               icon="shield"
@@ -129,6 +139,19 @@ export default function Work({ loaderData }: Route.ComponentProps) {
               sub={appComplaints ? "Чекають відповіді" : "Нових немає"}
               count={appComplaints}
             />
+            {exports && (
+              <a className="list-row" href="/work/export" download>
+                <span className="who-av">
+                  <Icon name="cal" small />
+                </span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <b>Завантажити Excel</b>
+                  <span className="sub">
+                    Вахти, обходи, завдання, загін і журнал змін
+                  </span>
+                </span>
+              </a>
+            )}
           </>
         )}
       </div>

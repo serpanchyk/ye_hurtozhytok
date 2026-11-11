@@ -32,7 +32,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     // The author changes or withdraws their own proposal here; everything
     // else people with the right do in the work pages.
     ownProposal: page.mine && page.a.status === "pending",
-    decider: canPublishAnnouncements(me),
+    manage: canPublishAnnouncements(me) && page.canEdit,
     sent: new URL(request.url).searchParams.get("sent") === "1",
   };
 }
@@ -56,7 +56,7 @@ export default function AnnouncementPage({
   loaderData,
   actionData,
 }: Route.ComponentProps) {
-  const { a, today, ownProposal, decider, sent } = loaderData;
+  const { a, today, ownProposal, manage, sent } = loaderData;
   return (
     <>
       <TopBar back="/" title="Оголошення" />
@@ -97,7 +97,7 @@ export default function AnnouncementPage({
           </Form>
         </div>
       )}
-      {decider && (
+      {manage && (
         <div className="home-actions">
           <Link
             viewTransition

@@ -4,6 +4,7 @@ import { Credit, Icon, TopBar, type IconName } from "~/components/ui";
 import { countPending } from "~/lib/announcements.server";
 import { requireProfile } from "~/lib/auth.server";
 import {
+  canDecideAnnouncements,
   canProposeAnnouncement,
   canPublishAnnouncements,
   isSiteManager,
@@ -20,17 +21,25 @@ export const meta: Route.MetaFunction = () => [
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const me = await requireProfile(request, env);
+  const pending = canDecideAnnouncements(me) ? await countPending(env) : 0;
   return {
     // A tile per work section the person has.
     work: workSectionsFor(me).map((s) => ({ ...s, to: workHref(s.id) })),
-    // Those who publish post from their section; everyone else proposes here.
-    propose: canProposeAnnouncement(me) && !canPublishAnnouncements(me),
-    // What waits: proposals for the council, complaints about the app for
-    // the site manager.
+    // Everyone has the announcement tile: residents propose, those who
+    // publish post at once.
+    announce: canPublishAnnouncements(me)
+      ? { to: "/work/announcements/new", title: "Нове оголошення" }
+      : canProposeAnnouncement(me)
+        ? { to: "/announcements/new", title: "Запропонувати оголошення" }
+        : null,
+    // What waits: proposals for the council, proposals and complaints about
+    // the app for the site manager.
     waiting: {
-      council: canPublishAnnouncements(me) ? await countPending(env) : 0,
+      council: pending,
       squad: 0,
-      manager: isSiteManager(me) ? (await listAppComplaints(env)).length : 0,
+      manager: isSiteManager(me)
+        ? pending + (await listAppComplaints(env)).length
+        : 0,
     },
   };
 }
@@ -40,14 +49,21 @@ function Tile({
   icon,
   title,
   count,
+  work = false,
 }: {
   to: string;
   icon: IconName;
   title: string;
   count?: number;
+  /** A work section's tile: dark, so it never passes for a service. */
+  work?: boolean;
 }) {
   return (
-    <Link viewTransition className="glass service-tile" to={to}>
+    <Link
+      viewTransition
+      className={`glass service-tile${work ? " is-work" : ""}`}
+      to={to}
+    >
       <span className="who-av">
         <Icon name={icon} small />
       </span>
@@ -59,7 +75,7 @@ function Tile({
 
 /** Every service of the dormitory in one place; the bottom menu stays short. */
 export default function Services({ loaderData }: Route.ComponentProps) {
-  const { work, propose, waiting } = loaderData;
+  const { work, announce, waiting } = loaderData;
   return (
     <>
       <TopBar />
@@ -70,23 +86,30 @@ export default function Services({ loaderData }: Route.ComponentProps) {
         <Tile to="/laundry" icon="washer" title="Пральня" />
         <Tile to="/board" icon="board" title="Дошка" />
         <Tile to="/complaints" icon="mail" title="Звернення" />
-        {propose && (
-          <Tile
-            to="/announcements/new"
-            icon="horn"
-            title="Запропонувати оголошення"
-          />
+        {announce && (
+          <Tile to={announce.to} icon="horn" title={announce.title} />
         )}
-        {work.map((s) => (
-          <Tile
-            key={s.id}
-            to={s.to}
-            icon={s.icon}
-            title={s.label}
-            count={waiting[s.id]}
-          />
-        ))}
       </nav>
+      {work.length > 0 && (
+        <>
+          <div className="section-h">
+            <h3>Робота</h3>
+            <span className="muted">для вашої ролі</span>
+          </div>
+          <nav className="service-grid" aria-label="Робота">
+            {work.map((s) => (
+              <Tile
+                key={s.id}
+                to={s.to}
+                icon={s.icon}
+                title={s.label}
+                count={waiting[s.id]}
+                work
+              />
+            ))}
+          </nav>
+        </>
+      )}
       <Credit />
     </>
   );
