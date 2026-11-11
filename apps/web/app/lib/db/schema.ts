@@ -41,12 +41,15 @@ export const COMPLAINT_TOPICS = [
   "furniture",
   "laundry",
   "cleaning",
-  "other",
+  "council_other",
   "noise",
   "strangers",
   "safety",
   "rules",
-  "app",
+  "squad_other",
+  "app_bug",
+  "app_idea",
+  "app_other",
 ] as const;
 export type ComplaintTopic = (typeof COMPLAINT_TOPICS)[number];
 

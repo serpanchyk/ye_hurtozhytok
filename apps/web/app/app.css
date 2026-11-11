@@ -2433,6 +2433,13 @@ input[type="search"]::-webkit-search-decoration {
   font-size: 14px;
   font-weight: 600;
 }
+.choice-hint {
+  display: block;
+  margin-top: 8px;
+  padding-left: 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
 .choice-chips {
   display: flex;
   flex-wrap: wrap;
@@ -3789,6 +3796,30 @@ html:not(.booted) .ticket::after,
   position: absolute;
   top: 14px;
   right: 14px;
+}
+
+/* ---------- a complaint: «Кому», then that recipient's topics ---------- */
+/* Radio labels as a segmented control: without JavaScript the checked one
+   highlights itself; once live, the gliding pill does. */
+.seg > label[data-pill-item] {
+  cursor: pointer;
+}
+.seg:not(.has-pill) > [data-pill-item]:has(> input:checked) {
+  color: var(--ink);
+  font-weight: 600;
+  background: #fff;
+  box-shadow: var(--shadow-gloss);
+}
+.seg > [data-pill-item]:has(> input:focus-visible) {
+  outline: 2px solid var(--mine);
+  outline-offset: 2px;
+}
+.form:has([name="to"][value="council"]:checked)
+  .topic-group:not([data-to="council"]),
+.form:has([name="to"][value="squad"]:checked)
+  .topic-group:not([data-to="squad"]),
+.form:has([name="to"][value="app"]:checked) .topic-group:not([data-to="app"]) {
+  display: none;
 }
 
 /* ---------- task boards ---------- */

@@ -13,34 +13,58 @@ export const REPLY_MAX = 500;
 /** Complaints one person may have open at once. */
 export const MAX_OPEN = 5;
 
+/** Who a complaint goes to; the form asks this first. */
+export const RECIPIENTS = [
+  { id: "council", label: "Студрада", hint: "Поломки, чистота, побут" },
+  { id: "squad", label: "Оперзагін", hint: "Шум, сторонні, безпека" },
+  { id: "app", label: "Застосунок", hint: "Щось не так у єГуртожитку" },
+] as const;
+export type Recipient = (typeof RECIPIENTS)[number]["id"];
+
 export const TOPIC_LABELS: Record<ComplaintTopic, string> = {
   electricity: "Електрика",
   plumbing: "Сантехніка",
   furniture: "Меблі й вікна",
   laundry: "Пралки",
   cleaning: "Чистота",
-  other: "Інше",
+  council_other: "Інше",
   noise: "Шум",
   strangers: "Сторонні",
   safety: "Безпека",
   rules: "Порушення правил",
-  app: "Про застосунок",
+  squad_other: "Інше",
+  app_bug: "Щось не працює",
+  app_idea: "Ідея",
+  app_other: "Інше",
 };
 
-/** Who gets it: the council's board, the squad's board, or (null) the site manager. */
-export const TOPIC_BOARD: Record<ComplaintTopic, Board | null> = {
-  electricity: "council",
-  plumbing: "council",
-  furniture: "council",
-  laundry: "council",
-  cleaning: "council",
-  other: "council",
-  noise: "squad",
-  strangers: "squad",
-  safety: "squad",
-  rules: "squad",
-  app: null,
+/** The topics of each recipient, «Інше» always last. */
+export const TOPICS_FOR: Record<Recipient, readonly ComplaintTopic[]> = {
+  council: [
+    "electricity",
+    "plumbing",
+    "furniture",
+    "laundry",
+    "cleaning",
+    "council_other",
+  ],
+  squad: ["noise", "strangers", "safety", "rules", "squad_other"],
+  app: ["app_bug", "app_idea", "app_other"],
 };
+
+export const APP_TOPICS = TOPICS_FOR.app;
+
+export function recipientOf(topic: ComplaintTopic): Recipient {
+  return (Object.keys(TOPICS_FOR) as Recipient[]).find((r) =>
+    TOPICS_FOR[r].includes(topic),
+  )!;
+}
+
+/** Who gets it: the council's board, the squad's board, or (null) the site manager. */
+export function boardFor(topic: ComplaintTopic): Board | null {
+  const to = recipientOf(topic);
+  return to === "app" ? null : to;
+}
 
 export function isTopic(value: unknown): value is ComplaintTopic {
   return (
@@ -114,7 +138,9 @@ export function parseComplaintForm(
   const topic = form.get("topic");
   const body = text(form, "body");
   const place = text(form, "place").replace(/\s+/g, " ");
-  if (!isTopic(topic)) errors.topic = "Оберіть, про що звернення.";
+  const to = form.get("to");
+  if (!isTopic(topic) || (to !== null && to !== recipientOf(topic)))
+    errors.topic = "Оберіть, що сталося.";
   if (body.length < 5) errors.body = "Опишіть, що сталося.";
   else if (body.length > BODY_MAX) errors.body = `До ${BODY_MAX} символів.`;
   if (place.length > PLACE_MAX)

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  TOPIC_BOARD,
+  TOPICS_FOR,
+  boardFor,
   cardTitle,
   complaintStatus,
   parseComplaintForm,
@@ -20,9 +21,14 @@ function form(values: Record<string, string>) {
 
 describe("complaints", () => {
   it("sends each topic to the right side", () => {
-    expect(TOPIC_BOARD.plumbing).toBe("council");
-    expect(TOPIC_BOARD.noise).toBe("squad");
-    expect(TOPIC_BOARD.app).toBeNull();
+    expect(boardFor("plumbing")).toBe("council");
+    expect(boardFor("noise")).toBe("squad");
+    expect(boardFor("app_bug")).toBeNull();
+  });
+  it("always offers «Інше» last", () => {
+    expect(TOPICS_FOR.council.at(-1)).toBe("council_other");
+    expect(TOPICS_FOR.squad.at(-1)).toBe("squad_other");
+    expect(TOPICS_FOR.app.at(-1)).toBe("app_other");
   });
   it("takes the state from the card", () => {
     const base = { rejectedAt: null, resolvedAt: null };
@@ -50,6 +56,12 @@ describe("complaints", () => {
     expect(parseComplaintForm(form({ topic: "noise", body: "ой" })).ok).toBe(
       false,
     );
+    // A topic left checked under another recipient does not slip through.
+    expect(
+      parseComplaintForm(
+        form({ to: "council", topic: "noise", body: "Шумлять" }),
+      ).ok,
+    ).toBe(false);
     expect(
       parseComplaintForm(
         form({ topic: "noise", body: " Гучна музика ", place: " " }),

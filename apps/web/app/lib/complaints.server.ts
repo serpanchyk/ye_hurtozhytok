@@ -1,10 +1,11 @@
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 
 import {
   COMPLAINT_STATUS_LABELS,
+  APP_TOPICS,
   MAX_OPEN,
-  TOPIC_BOARD,
   TOPIC_LABELS,
+  boardFor,
   cardTitle,
   complaintStatus,
   parseComplaintForm,
@@ -106,7 +107,7 @@ export async function createComplaint(
     };
 
   const db = getDb(env);
-  const board = TOPIC_BOARD[topic];
+  const board = boardFor(topic);
   let taskId: number | null = null;
   if (board) {
     const t = await db
@@ -184,7 +185,7 @@ export async function listAppComplaints(env: Env) {
     .leftJoin(residents, eq(residents.id, complaints.authorId))
     .where(
       and(
-        eq(complaints.topic, "app"),
+        inArray(complaints.topic, [...APP_TOPICS]),
         isNull(complaints.rejectedAt),
         isNull(complaints.resolvedAt),
       ),
