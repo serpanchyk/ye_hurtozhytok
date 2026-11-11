@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1024" />
+    <title>єГуртожиток · звернення</title>
+    <!--
+      Posters C and D for the release with «Звернення», «Дошка» and «Послуги».
+      1024×1280 (4:5). Open as is for C (the complaint's journey), with #d
+      for D (the «Послуги» screen with a complaint card).
+      Render: google-chrome --headless=new --hide-scrollbars
+        --window-size=1024,1280 --screenshot=release-zvernennia-c.png
+        file://…/release-zvernennia-cd.html
+    -->
+    <style>
+      @font-face {
+        font-family: "Fixel Text";
+        src: url("../stickers/FixelText-Regular.woff2") format("woff2");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: "Fixel Text";
+        src: url("../stickers/FixelText-SemiBold.woff2") format("woff2");
+        font-weight: 600;
+      }
+      @font-face {
+        font-family: "Fixel Text";
+        src: url("../stickers/FixelText-Bold.woff2") format("woff2");
+        font-weight: 700;
+      }
+      @font-face {
+        font-family: "Fixel Display";
+        src: url("../stickers/FixelDisplay-Black.woff2") format("woff2");
+        font-weight: 900;
+      }
+
+      :root {
+        --ink: #101217;
+        --ink-2: #2b2f38;
+        --muted: #525a6b;
+        --faint: #626a7c;
+        --struck: #9aa1ae;
+        --mine: #2a37d8;
+        --mine-deep: #1b23a3;
+        --now: #e5484d;
+        --work: #8f5200;
+        --work-dot: #e8950f;
+        --font: "Fixel Text", -apple-system, system-ui, sans-serif;
+        --font-display: "Fixel Display", "Fixel Text", system-ui, sans-serif;
+        --glass: rgb(255 255 255 / 0.56);
+        --shadow-glass:
+          inset 0 1px 1px rgb(255 255 255 / 0.95),
+          inset 0 -1px 1px rgb(255 255 255 / 0.35),
+          inset 0 -22px 34px -26px rgb(255 255 255 / 0.8),
+          0 1px 2px rgb(16 18 23 / 0.05), 0 20px 40px -24px rgb(31 45 90 / 0.28);
+        --shadow-gloss:
+          inset 0 1px 0 #fff, 0 1px 2px rgb(16 18 23 / 0.08),
+          0 6px 16px -6px rgb(16 18 23 / 0.2);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1024px;
+        height: 1280px;
+        overflow: hidden;
+        background: #eef1f8;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ---------- shared ---------- */
+      .poster {
+        position: relative;
+        width: 1024px;
+        height: 1280px;
+        overflow: hidden;
+        padding: 64px 82px 0;
+        font-family: var(--font);
+        color: var(--ink);
+        background:
+          radial-gradient(
+            56% 40% at 2% 0%,
+            rgb(190 236 219 / 0.95),
+            transparent 72%
+          ),
+          radial-gradient(
+            46% 42% at 102% 30%,
+            rgb(200 219 250 / 0.95),
+            transparent 72%
+          ),
+          radial-gradient(
+            52% 34% at 8% 84%,
+            rgb(228 218 246 / 0.75),
+            transparent 72%
+          ),
+          radial-gradient(
+            40% 30% at 96% 98%,
+            rgb(214 228 250 / 0.7),
+            transparent 72%
+          ),
+          linear-gradient(180deg, #f4f6fb 0%, #eef1f8 100%);
+      }
+      body:not(.show-d) #d,
+      body.show-d #c {
+        display: none;
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+      .mark {
+        width: 64px;
+        height: 64px;
+        flex: none;
+        filter: drop-shadow(0 8px 14px rgb(16 18 23 / 0.28));
+      }
+      .wordmark {
+        font-weight: 700;
+        font-size: 38px;
+        letter-spacing: -0.035em;
+        line-height: 1;
+      }
+      .new {
+        display: inline-flex;
+        align-items: center;
+        height: 50px;
+        padding: 0 22px;
+        border-radius: 999px;
+        background: rgb(255 255 255 / 0.62);
+        box-shadow:
+          inset 0 1px 1px rgb(255 255 255 / 0.95),
+          inset 0 -1px 1px rgb(255 255 255 / 0.35),
+          0 1px 2px rgb(16 18 23 / 0.05),
+          0 16px 30px -18px rgb(31 45 90 / 0.3);
+        font-weight: 600;
+        font-size: 20px;
+        letter-spacing: -0.01em;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .new b {
+        font-weight: 700;
+        color: var(--ink);
+        margin-right: 0.3em;
+      }
+
+      h1 {
+        margin: 44px 0 0 -6px;
+        font-family: var(--font-display);
+        font-weight: 900;
+        font-size: var(--h1-size, 126px);
+        line-height: 0.88;
+        letter-spacing: -0.045em;
+        color: var(--ink);
+      }
+      h1 span {
+        display: block;
+        white-space: nowrap;
+      }
+      .struck {
+        position: relative;
+        display: inline-block;
+        color: var(--struck);
+      }
+      .struck::after {
+        content: "";
+        position: absolute;
+        left: -0.045em;
+        right: -0.045em;
+        top: 0.52em;
+        height: 0.11em;
+        border-radius: 0.06em;
+        background: var(--now);
+        transform: rotate(-4deg);
+      }
+
+      .sub {
+        margin: 28px 0 0;
+        font-weight: 700;
+        font-size: 30px;
+        line-height: 1.26;
+        letter-spacing: -0.022em;
+        color: var(--ink-2);
+      }
+
+      .cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 20px;
+        height: 82px;
+        padding: 0 38px 0 40px;
+        border-radius: 999px;
+        color: #fff;
+        background: linear-gradient(180deg, #2b2f38, #0d0f14);
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255 / 0.16),
+          0 20px 36px -16px rgb(16 18 23 / 0.6);
+        font-weight: 700;
+        font-size: 30px;
+        letter-spacing: -0.015em;
+        white-space: nowrap;
+      }
+      .cta svg {
+        width: 30px;
+        height: 30px;
+        flex: none;
+      }
+      .credit {
+        margin: 0;
+        font-weight: 600;
+        font-size: 20px;
+        color: #8a91a0;
+      }
+
+      /* The ultramarine object: the resident's own complaint, drawn like
+         the app's booking ticket. */
+      .ticket {
+        position: relative;
+        overflow: hidden;
+        color: #fff;
+        background:
+          radial-gradient(
+            120% 90% at 100% 0%,
+            rgb(110 125 255 / 0.3),
+            transparent 55%
+          ),
+          radial-gradient(
+            80% 70% at 0% 100%,
+            rgb(20 28 140 / 0.45),
+            transparent 60%
+          ),
+          linear-gradient(155deg, #3442e6 0%, #2a37d8 45%, #1b23a3 100%);
+        box-shadow:
+          inset 0 2px 2px rgb(255 255 255 / 0.35),
+          inset 0 -50px 80px -60px rgb(160 180 255 / 0.7),
+          0 40px 64px -30px rgb(27 35 163 / 0.62),
+          0 10px 22px -12px rgb(27 35 163 / 0.35);
+      }
+      .ticket .porthole {
+        position: absolute;
+        opacity: 0.3;
+        pointer-events: none;
+      }
+      .tag {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 9px 20px 9px 15px;
+        border-radius: 999px;
+        background: rgb(255 255 255 / 0.16);
+        font-weight: 600;
+        font-size: 23px;
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+      /* amber: «в роботі», the app's fourth signal */
+      .tag .dot {
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: var(--work-dot);
+        box-shadow: 0 0 0 5px rgb(232 149 15 / 0.3);
+      }
+      .ico {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* ---------- C: the complaint's journey ---------- */
+      #c .journey {
+        position: relative;
+        list-style: none;
+        margin: 36px 0 0;
+        padding: 0 0 0 68px;
+        display: grid;
+        gap: 14px;
+      }
+      /* the rail joining the three steps */
+      #c .journey::before {
+        content: "";
+        position: absolute;
+        left: 21px;
+        top: 48px;
+        bottom: 44px;
+        width: 4px;
+        border-radius: 2px;
+        background: linear-gradient(
+          180deg,
+          var(--ink) 0 46%,
+          rgb(16 18 23 / 0.16) 46% 100%
+        );
+      }
+      #c .step {
+        position: relative;
+      }
+      #c .node {
+        position: absolute;
+        left: -68px;
+        top: 50%;
+        width: 46px;
+        height: 46px;
+        margin-top: -23px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+      }
+      #c .done .node {
+        background: linear-gradient(180deg, #2b2f38, #0d0f14);
+        color: #fff;
+        box-shadow: 0 6px 14px -6px rgb(16 18 23 / 0.5);
+      }
+      #c .done .node svg {
+        width: 26px;
+        height: 26px;
+        stroke-width: 2.6;
+      }
+      #c .now .node {
+        background: var(--mine);
+        box-shadow:
+          0 0 0 8px rgb(42 55 216 / 0.16),
+          0 8px 18px -6px rgb(27 35 163 / 0.6);
+      }
+      #c .now .node::after {
+        content: "";
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #fff;
+      }
+      #c .next .node {
+        background: rgb(255 255 255 / 0.7);
+        box-shadow: inset 0 0 0 3px rgb(16 18 23 / 0.16);
+      }
+
+      #c .row-card {
+        display: grid;
+        gap: 4px;
+        padding: 18px 30px;
+        border-radius: 28px;
+        background: var(--glass);
+        box-shadow: var(--shadow-glass);
+      }
+      #c .row-card .line {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      #c .row-card b {
+        font-weight: 700;
+        font-size: 30px;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+      }
+      #c .row-card span,
+      #c .row-card time {
+        font-weight: 600;
+        font-size: 23px;
+        color: var(--muted);
+        line-height: 1.3;
+      }
+      #c .next .row-card {
+        background: rgb(255 255 255 / 0.28);
+        box-shadow: inset 0 0 0 2px rgb(16 18 23 / 0.1);
+      }
+      #c .next .row-card b {
+        color: var(--muted);
+      }
+      #c .next .row-card span {
+        color: #8a91a0;
+      }
+
+      #c .ticket {
+        padding: 24px 32px 28px;
+        border-radius: 36px;
+      }
+      #c .ticket .porthole {
+        right: -96px;
+        top: -110px;
+        width: 360px;
+        height: 360px;
+      }
+      #c .ticket .line {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      #c .ticket time {
+        font-weight: 600;
+        font-size: 23px;
+        color: rgb(255 255 255 / 0.75);
+      }
+      #c .ticket .lead {
+        position: relative;
+        margin-top: 14px;
+        font-weight: 600;
+        font-size: 26px;
+        line-height: 1.2;
+        color: rgb(255 255 255 / 0.8);
+      }
+      #c .ticket .name {
+        position: relative;
+        margin: 4px 0 0 -2px;
+        font-family: var(--font-display);
+        font-weight: 900;
+        font-size: 78px;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+      #c .bottom {
+        position: absolute;
+        left: 82px;
+        right: 82px;
+        bottom: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      /* ---------- D: «Послуги» on a phone, a complaint peeking out ---------- */
+      #d h1 {
+        --h1-size: 106px;
+        margin-top: 46px;
+      }
+      #d .left {
+        position: absolute;
+        left: 82px;
+        top: 506px;
+        width: 380px;
+      }
+      #d .sub {
+        margin: 0;
+        font-size: 29px;
+      }
+      #d .cta {
+        margin-top: 36px;
+        height: 66px;
+        gap: 14px;
+        padding: 0 28px 0 30px;
+        font-size: 23px;
+      }
+      #d .cta svg {
+        width: 24px;
+        height: 24px;
+      }
+      #d .credit {
+        margin-top: 26px;
+      }
+
+      #d .phone {
+        position: absolute;
+        left: 496px;
+        top: 466px;
+        width: 468px;
+        height: 860px;
+        padding: 30px 24px;
+        border-radius: 64px;
+        transform: rotate(2.5deg);
+        background:
+          radial-gradient(
+            70% 34% at 0% 0%,
+            rgb(205 238 226 / 0.9),
+            transparent 72%
+          ),
+          radial-gradient(
+            70% 40% at 100% 40%,
+            rgb(207 224 249 / 0.95),
+            transparent 72%
+          ),
+          radial-gradient(
+            70% 34% at 20% 90%,
+            rgb(228 218 246 / 0.8),
+            transparent 72%
+          ),
+          #edf2f8;
+        box-shadow:
+          inset 0 0 0 10px rgb(255 255 255 / 0.75),
+          inset 0 0 0 11px rgb(16 18 23 / 0.06),
+          0 2px 4px rgb(16 18 23 / 0.06),
+          0 50px 90px -40px rgb(31 45 90 / 0.45);
+      }
+      #d .phone-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 10px 0;
+      }
+      #d .phone-top .mark {
+        width: 40px;
+        height: 40px;
+        filter: drop-shadow(0 4px 8px rgb(16 18 23 / 0.28));
+      }
+      #d .phone-top .wordmark {
+        font-size: 24px;
+      }
+      #d .phone h2 {
+        margin: 24px 10px 14px;
+        font-weight: 700;
+        font-size: 42px;
+        letter-spacing: -0.035em;
+        line-height: 1.1;
+      }
+      #d .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        padding: 0 4px;
+      }
+      #d .tile {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 18px;
+        min-height: 128px;
+        padding: 18px;
+        border-radius: 28px;
+        background: var(--glass);
+        box-shadow: var(--shadow-glass);
+      }
+      #d .tile .av {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: var(--shadow-gloss);
+        display: grid;
+        place-items: center;
+        color: var(--ink);
+      }
+      #d .tile .av svg {
+        width: 30px;
+        height: 30px;
+      }
+      #d .tile b {
+        font-weight: 700;
+        font-size: 22px;
+        line-height: 1.2;
+        letter-spacing: -0.015em;
+      }
+
+      #d .peek {
+        position: absolute;
+        left: 56px;
+        top: 962px;
+        width: 540px;
+        padding: 26px 34px 28px;
+        border-radius: 36px;
+        transform: rotate(-3deg);
+      }
+      #d .peek .porthole {
+        right: -110px;
+        top: -120px;
+        width: 340px;
+        height: 340px;
+      }
+      #d .peek .lead {
+        position: relative;
+        margin-top: 16px;
+        font-weight: 600;
+        font-size: 23px;
+        line-height: 1.2;
+        color: rgb(255 255 255 / 0.8);
+      }
+      #d .peek .value {
+        position: relative;
+        margin: 6px 0 8px -2px;
+        font-family: var(--font-display);
+        font-weight: 900;
+        font-size: 66px;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+      #d .peek .who {
+        position: relative;
+        font-weight: 700;
+        font-size: 26px;
+        line-height: 1.2;
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <linearGradient id="mk-a" x1="0" y1="0" x2=".6" y2="1">
+          <stop offset="0" stop-color="#2b2f38" />
+          <stop offset="1" stop-color="#0d0f14" />
+        </linearGradient>
+        <linearGradient id="mk-b" x1="0" y1="0" x2=".7" y2="1">
+          <stop offset="0" stop-color="#4250ee" />
+          <stop offset="1" stop-color="#1b23a3" />
+        </linearGradient>
+      </defs>
+      <symbol id="mark" viewBox="0 0 100 100">
+        <rect width="100" height="100" rx="23" fill="url(#mk-a)" />
+        <g fill="#fff" fill-opacity=".16">
+          <rect x="20" y="20" width="16" height="16" rx="4.5" />
+          <rect x="64" y="20" width="16" height="16" rx="4.5" />
+          <rect x="42" y="42" width="16" height="16" rx="4.5" />
+          <rect x="20" y="64" width="16" height="16" rx="4.5" />
+          <rect x="64" y="64" width="16" height="16" rx="4.5" />
+        </g>
+        <g fill="#fff">
+          <rect x="42" y="20" width="16" height="16" rx="4.5" />
+          <rect x="20" y="42" width="16" height="16" rx="4.5" />
+          <rect x="42" y="64" width="16" height="16" rx="4.5" />
+        </g>
+        <rect x="64" y="42" width="16" height="16" rx="4.5" fill="url(#mk-b)" />
+      </symbol>
+      <symbol id="porthole" viewBox="0 0 200 200">
+        <circle
+          cx="100"
+          cy="100"
+          r="96"
+          fill="none"
+          stroke="#fff"
+          stroke-width="2"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="74"
+          fill="none"
+          stroke="#fff"
+          stroke-width="10"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="52"
+          fill="none"
+          stroke="#fff"
+          stroke-width="1.5"
+        />
+      </symbol>
+      <symbol id="arrow" viewBox="0 0 24 24">
+        <path
+          d="M4 12h15M13 6l6 6-6 6"
+          fill="none"
+          stroke="#fff"
+          stroke-width="2.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </symbol>
+      <!-- the app's own icons (apps/web/app/components/ui.tsx) -->
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="m5.5 12.5 4 4 9-9.5" />
+      </symbol>
+      <symbol id="i-washer" viewBox="0 0 24 24">
+        <rect x="4" y="2.8" width="16" height="18.4" rx="3.5" />
+        <circle cx="12" cy="13" r="4.6" />
+        <path d="M9.6 13.6c1.1-.9 2.3.9 4.8 0" />
+        <path d="M7.5 6h3" />
+      </symbol>
+      <symbol id="i-board" viewBox="0 0 24 24">
+        <rect x="3.5" y="4" width="17" height="16" rx="3.5" />
+        <path
+          d="M9.2 4v16M14.8 4v16M5.8 8h1.6M11.2 8h1.6M11.2 11.5h1.6M16.6 8h1.6"
+        />
+      </symbol>
+      <symbol id="i-mail" viewBox="0 0 24 24">
+        <rect x="3" y="5" width="18" height="14" rx="3.2" />
+        <path d="m4 7 8 6 8-6" />
+      </symbol>
+      <symbol id="i-horn" viewBox="0 0 24 24">
+        <path
+          d="M4 10v4a1.5 1.5 0 0 0 1.5 1.5H7l9 4.5V4L7 8.5H5.5A1.5 1.5 0 0 0 4 10z"
+        />
+        <path d="M7.5 15.5 9 20.5h2.5" />
+        <path d="M19.5 9.5a3.5 3.5 0 0 1 0 5" />
+      </symbol>
+    </svg>
+
+    <!-- C: the complaint's journey -->
+    <main class="poster" id="c">
+      <header class="top">
+        <div class="brand">
+          <svg class="mark" aria-hidden="true"><use href="#mark" /></svg>
+          <span class="wordmark">єГуртожиток</span>
+        </div>
+        <span class="new"><b>Нове:</b>Звернення, Дошка, Послуги</span>
+      </header>
+
+      <h1>
+        <span>Звернення</span>
+        <span>не губляться</span>
+        <span>в <span class="struck">чаті</span></span>
+      </h1>
+
+      <p class="sub">
+        Пишете студраді чи оперзагону — і бачите, хто вже працює над вашою
+        справою.
+      </p>
+
+      <ol class="journey">
+        <li class="step done">
+          <span class="node"
+            ><svg class="ico"><use href="#i-check" /></svg
+          ></span>
+          <div class="row-card">
+            <div class="line"><b>Надіслано</b><time>23:14</time></div>
+            <span>Шум після 23:00 · 5 поверх, 512</span>
+          </div>
+        </li>
+        <li class="step now">
+          <span class="node"></span>
+          <article class="ticket">
+            <svg class="porthole" aria-hidden="true">
+              <use href="#porthole" />
+            </svg>
+            <div class="line">
+              <span class="tag"><span class="dot"></span>В роботі</span>
+              <time>23:20</time>
+            </div>
+            <div class="lead">Виконує</div>
+            <div class="name">Владислав Т.</div>
+          </article>
+        </li>
+        <li class="step next">
+          <span class="node"></span>
+          <div class="row-card">
+            <div class="line">
+              <b>Вирішено</b><span>тут буде відповідь</span>
+            </div>
+          </div>
+        </li>
+      </ol>
+
+      <footer class="bottom">
+        <span class="cta">
+          ehurtozhytok.pages.dev
+          <svg aria-hidden="true"><use href="#arrow" /></svg>
+        </span>
+        <p class="credit">Розробник: @serpanchyk</p>
+      </footer>
+    </main>
+
+    <!-- D: «Послуги» on a phone, the complaint card peeking out -->
+    <main class="poster" id="d">
+      <header class="top">
+        <div class="brand">
+          <svg class="mark" aria-hidden="true"><use href="#mark" /></svg>
+          <span class="wordmark">єГуртожиток</span>
+        </div>
+      </header>
+
+      <h1>
+        <span>Гуртожиток</span>
+        <span>у телефоні,</span>
+        <span>не в <span class="struck">чатах</span></span>
+      </h1>
+
+      <div class="left">
+        <p class="sub">
+          Пральня, дошка й звернення до студради чи оперзагону — на одній
+          сторінці.
+        </p>
+        <span class="cta">
+          ehurtozhytok.pages.dev
+          <svg aria-hidden="true"><use href="#arrow" /></svg>
+        </span>
+        <p class="credit">Розробник: @serpanchyk</p>
+      </div>
+
+      <div class="phone" aria-hidden="true">
+        <div class="phone-top">
+          <svg class="mark"><use href="#mark" /></svg>
+          <span class="wordmark">єГуртожиток</span>
+        </div>
+        <h2>Послуги</h2>
+        <div class="grid">
+          <div class="tile">
+            <span class="av"
+              ><svg class="ico"><use href="#i-washer" /></svg
+            ></span>
+            <b>Пральня</b>
+          </div>
+          <div class="tile">
+            <span class="av"
+              ><svg class="ico"><use href="#i-board" /></svg
+            ></span>
+            <b>Дошка</b>
+          </div>
+          <div class="tile">
+            <span class="av"
+              ><svg class="ico"><use href="#i-mail" /></svg
+            ></span>
+            <b>Звернення</b>
+          </div>
+          <div class="tile">
+            <span class="av"
+              ><svg class="ico"><use href="#i-horn" /></svg
+            ></span>
+            <b>Запропонувати оголошення</b>
+          </div>
+        </div>
+      </div>
+
+      <article class="ticket peek">
+        <svg class="porthole" aria-hidden="true"><use href="#porthole" /></svg>
+        <span class="tag"><span class="dot"></span>Ваше звернення</span>
+        <div class="lead">Шум після 23:00 · 5 поверх, 512</div>
+        <div class="value">В роботі</div>
+        <div class="who">Виконує: Владислав Т.</div>
+      </article>
+    </main>
+
+    <script>
+      if (location.hash === "#d") document.body.classList.add("show-d");
+    </script>
+  </body>
+</html>
