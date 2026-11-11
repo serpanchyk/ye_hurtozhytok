@@ -3300,6 +3300,12 @@ html[data-nav="back"]::view-transition-new(page) {
 ::view-transition-group(tab-pill) {
   animation-duration: 0.34s;
 }
+/* The bar's glass blur is captured as a plain rectangle during a page slide,
+   which showed as a square around the bar; keep the layer in the bar's shape. */
+::view-transition-group(tabbar) {
+  border-radius: 30px;
+  overflow: clip;
+}
 @keyframes vt-to-left {
   60% {
     opacity: 0;
