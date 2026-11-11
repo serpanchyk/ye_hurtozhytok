@@ -115,6 +115,12 @@ export default function Work({ loaderData }: Route.ComponentProps) {
               sub="Вахти й обходи цього тижня"
             />
             <LinkRow
+              to="/work/stats"
+              icon="clock"
+              title="Хто скільки відсидів"
+              sub="Минулі вахти кожного"
+            />
+            <LinkRow
               to="/work/board?b=squad"
               icon="board"
               title="Дошка загону"

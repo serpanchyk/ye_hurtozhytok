@@ -1,4 +1,14 @@
-import { and, asc, eq, gte, inArray, isNull, lte } from "drizzle-orm";
+import {
+  and,
+  asc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  lte,
+} from "drizzle-orm";
 
 import { activity, getDb } from "./db";
 import { residents, shifts, type Shift } from "./db/schema";
@@ -15,6 +25,7 @@ import {
   NO_DUTY_MESSAGE,
   hasDuty,
   parseShiftForm,
+  rankShiftStats,
   type ShiftErrors,
 } from "./shifts";
 import { addDays } from "./time";
@@ -24,7 +35,11 @@ export async function squadPeople(env: Env) {
   const ids = await idsWithRoles(env, ["squad", "squad_head", "site_manager"]);
   if (ids.length === 0) return [];
   return getDb(env)
-    .select({ id: residents.id, name: residents.name })
+    .select({
+      id: residents.id,
+      name: residents.name,
+      telegram: residents.telegram,
+    })
     .from(residents)
     .where(and(inArray(residents.id, ids), eq(residents.blocked, false)))
     .orderBy(asc(residents.name))
@@ -217,4 +232,30 @@ export async function leaveShift(
     details: { residentId: s.residentId },
   });
   return null;
+}
+
+/**
+ * Past shifts (days before today) of everyone who stands duty, people with
+ * none yet included, ranked.
+ */
+export async function shiftStats(env: Env, today: string) {
+  const monthStart = `${today.slice(0, 8)}01`;
+  const [people, past] = await Promise.all([
+    squadPeople(env),
+    getDb(env)
+      .select({ residentId: shifts.residentId, date: shifts.date })
+      .from(shifts)
+      .where(and(isNotNull(shifts.residentId), lt(shifts.date, today)))
+      .all(),
+  ]);
+  return rankShiftStats(
+    people.map((p) => {
+      const own = past.filter((s) => s.residentId === p.id);
+      return {
+        ...p,
+        total: own.length,
+        month: own.filter((s) => s.date >= monthStart).length,
+      };
+    }),
+  );
 }

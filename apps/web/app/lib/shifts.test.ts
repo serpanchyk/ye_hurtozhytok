@@ -6,7 +6,12 @@ import {
   canStandShift,
   leadsSquad,
 } from "./permissions";
-import { hasDuty, nextDutyDate, parseShiftForm } from "./shifts";
+import {
+  hasDuty,
+  nextDutyDate,
+  parseShiftForm,
+  rankShiftStats,
+} from "./shifts";
 import { startOfWeek } from "./time";
 
 function form(values: Record<string, string>) {
@@ -98,5 +103,28 @@ describe("shift permissions", () => {
     expect(canLeaveShift(member, { residentId: 6 })).toBe(false);
     expect(canLeaveShift(head, { residentId: 7 })).toBe(true);
     expect(canLeaveShift(head, { residentId: null })).toBe(false);
+  });
+});
+
+describe("shift statistics", () => {
+  it("ranks by total, then this month, sharing places on ties", () => {
+    const row = (id: number, name: string, total: number, month = 0) => ({
+      id,
+      name,
+      total,
+      month,
+    });
+    const ranked = rankShiftStats([
+      row(1, "Антон", 3, 1),
+      row(2, "Микола", 5, 2),
+      row(3, "Богдан", 3, 1),
+      row(4, "Ігор", 0),
+    ]);
+    expect(ranked.map((r) => [r.name, r.place])).toEqual([
+      ["Микола", 1],
+      ["Антон", 2],
+      ["Богдан", 2],
+      ["Ігор", 4],
+    ]);
   });
 });

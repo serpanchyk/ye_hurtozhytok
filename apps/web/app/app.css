@@ -3841,6 +3841,13 @@ html:not(.booted) .ticket::after,
   display: flex;
 }
 
+.stat-total {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 22px;
+  font-feature-settings: "tnum";
+}
+
 /* ---------- task boards ---------- */
 .board-bar {
   display: grid;

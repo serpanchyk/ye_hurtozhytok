@@ -68,3 +68,35 @@ export function parseShiftForm(
     values: { date: date.value, residentId, note: note || null },
   };
 }
+
+export type ShiftStat = {
+  id: number;
+  name: string;
+  /** Shifts already sat (the day is over). */
+  total: number;
+  /** Of those, how many this month. */
+  month: number;
+};
+
+/**
+ * «Хто скільки відсидів»: most shifts first, then most this month, then by
+ * name. Equal totals share a place (1, 1, 3), so nobody is ranked by the
+ * alphabet.
+ */
+export function rankShiftStats<T extends ShiftStat>(
+  rows: readonly T[],
+): (T & { place: number })[] {
+  const sorted = [...rows].sort(
+    (a, b) =>
+      b.total - a.total ||
+      b.month - a.month ||
+      a.name.localeCompare(b.name, "uk"),
+  );
+  let place = 0;
+  return sorted.map((row, i) => {
+    const prev = sorted[i - 1];
+    if (!prev || prev.total !== row.total || prev.month !== row.month)
+      place = i + 1;
+    return { ...row, place };
+  });
+}
