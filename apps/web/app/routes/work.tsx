@@ -1,7 +1,7 @@
 import { Link, redirect } from "react-router";
 
 import { PillGroup } from "~/components/pill-group";
-import { Credit, LinkRow, TopBar } from "~/components/ui";
+import { Credit, Icon, LinkRow, TopBar } from "~/components/ui";
 import { countPending } from "~/lib/announcements.server";
 import { listAppComplaints } from "~/lib/complaints.server";
 import { requireProfile } from "~/lib/auth.server";
@@ -10,6 +10,7 @@ import {
   isCouncil,
   isSiteManager,
   isSquad,
+  leadsSquad,
 } from "~/lib/permissions";
 import type { Route } from "./+types/work";
 
@@ -39,6 +40,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const asked = new URL(request.url).searchParams.get("s");
   const section: Section = mine.find((s) => s.id === asked)?.id ?? mine[0].id;
   return {
+    leads: leadsSquad(me),
     sections: mine.map((s) => ({ id: s.id, label: s.label })),
     section,
     pending:
@@ -51,7 +53,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export default function Work({ loaderData }: Route.ComponentProps) {
-  const { sections, section, pending, appComplaints } = loaderData;
+  const { sections, section, pending, appComplaints, leads } = loaderData;
   return (
     <>
       <TopBar back="/services" />
@@ -120,6 +122,19 @@ export default function Work({ loaderData }: Route.ComponentProps) {
               title="Хто скільки відсидів"
               sub="Минулі вахти кожного"
             />
+            {leads && (
+              <a className="list-row" href="/work/export" download>
+                <span className="who-av">
+                  <Icon name="cal" small />
+                </span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <b>Завантажити Excel</b>
+                  <span className="sub">
+                    Вахти, обходи, завдання, загін і журнал змін
+                  </span>
+                </span>
+              </a>
+            )}
             <LinkRow
               to="/work/board?b=squad"
               icon="board"

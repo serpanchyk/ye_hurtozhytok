@@ -37,6 +37,7 @@ export default [
     route("work/shifts/new", "routes/work-shift-new.tsx"),
     route("work/shifts/:id/edit", "routes/work-shift-edit.tsx"),
     route("work/stats", "routes/work-stats.tsx"),
+    route("work/export", "routes/work-export.ts"),
     route("work/patrols/new", "routes/work-patrol-new.tsx"),
     route("work/patrols/:id/edit", "routes/work-patrol-edit.tsx"),
     route("work/complaints", "routes/work-complaints.tsx"),
