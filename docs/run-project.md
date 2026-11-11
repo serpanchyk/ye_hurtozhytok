@@ -107,6 +107,23 @@ npx wrangler r2 bucket create ehurtozhytok-media
 Якщо потрібна нова база: `npx wrangler d1 create ehurtozhytok`, `id` з
 відповіді — у `database_id` у `wrangler.jsonc`.
 
+## Перенесення Оперети (один раз)
+
+Таблиці вахт, обходів і карток мають бути порожні. `emails.json` («id людини в
+Опереті → пошта @lpnu.ua або null») у репозиторій не додаємо.
+
+```bash
+cd apps/web
+npx tsx scripts/opereta-import.ts --query                # друкує запит вивантаження
+# у репозиторії Оперети, apps/web, з цим запитом:
+npx wrangler d1 execute opereta --remote --json --command "<запит>" > opereta.json
+npx tsx scripts/opereta-import.ts opereta.json emails.json > import.sql
+npx wrangler d1 execute ehurtozhytok --remote --file import.sql
+```
+
+Потім «Управа → Telegram-група → Налаштувати», щоб бот слухав єГуртожиток, і
+вимкнути бота Оперети.
+
 ## Вхід через Google (@lpnu.ua)
 
 1. Зайди в [Google Cloud Console](https://console.cloud.google.com/) **акаунтом
