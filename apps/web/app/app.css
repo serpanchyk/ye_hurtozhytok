@@ -3847,6 +3847,28 @@ html:not(.booted) .ticket::after,
 }
 
 /* ---------- the squad's week of shifts ---------- */
+.av-stack {
+  display: flex;
+  flex: none;
+}
+.av-stack .who-av {
+  width: 34px;
+  height: 34px;
+  font-size: 12px;
+}
+.av-stack .who-av + .who-av {
+  margin-left: -12px;
+  box-shadow:
+    0 0 0 2px #fff,
+    var(--shadow-gloss);
+}
+/* Many names stay two lines; the avatars already show who. */
+.list-row span.sub.clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .week-nav {
   display: flex;
   align-items: center;

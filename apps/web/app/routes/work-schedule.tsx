@@ -1,6 +1,6 @@
 import { Form, Link, data, redirect, useNavigation } from "react-router";
 
-import { Credit, Icon, TopBar } from "~/components/ui";
+import { AvatarStack, Credit, Icon, TopBar } from "~/components/ui";
 import { requireProfile } from "~/lib/auth.server";
 import { isSquad } from "~/lib/permissions";
 import { weekPatrols } from "~/lib/patrols.server";
@@ -188,12 +188,10 @@ export default function Schedule({
               )}
               {d.patrols.map((p) => (
                 <div className="list-row" key={p.id}>
-                  <span className="who-av">
-                    <Icon name="pin" small />
-                  </span>
+                  <AvatarStack names={p.people} />
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <b>{p.planned ? "Обхід · плануємо" : "Обхід"}</b>
-                    <span className="sub">{p.people.join(", ")}</span>
+                    <span className="sub clamp">{p.people.join(", ")}</span>
                   </span>
                   {p.canEdit && (
                     <Link

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
+import { initials } from "~/lib/profile";
 import { SECTIONS, type Tab } from "~/lib/sections";
 
 import {
@@ -227,6 +228,23 @@ export function Brand() {
       </svg>
       <span className="wordmark">єГуртожиток</span>
     </Link>
+  );
+}
+
+/** People as overlapping initials circles: up to three, then «+N». */
+export function AvatarStack({ names }: { names: string[] }) {
+  const shown = names.slice(0, 3);
+  return (
+    <span className="av-stack" aria-hidden="true">
+      {shown.map((n) => (
+        <span className="who-av" key={n}>
+          {initials(n)}
+        </span>
+      ))}
+      {names.length > shown.length && (
+        <span className="who-av">+{names.length - shown.length}</span>
+      )}
+    </span>
   );
 }
 
