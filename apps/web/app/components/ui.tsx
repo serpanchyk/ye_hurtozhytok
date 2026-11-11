@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
+import { initials } from "~/lib/profile";
+
 import {
   BUFFER_MIN,
   CLOSE_MIN,
@@ -217,6 +219,52 @@ export function Brand() {
         <use href="#logo-facade" />
       </svg>
       <span className="wordmark">єГуртожиток</span>
+    </Link>
+  );
+}
+
+/** The header of a menu section: the brand and the person's initials, leading to «Моє». */
+export function SectionBar({ name }: { name: string }) {
+  return (
+    <div className="topbar">
+      <Brand />
+      <Link
+        className="avatar"
+        to="/me"
+        aria-label={`Моє: ${name}`}
+        style={{ textDecoration: "none" }}
+      >
+        {initials(name)}
+      </Link>
+    </div>
+  );
+}
+
+/** A row in a glass list that leads somewhere: icon, title, a second line, an optional count. */
+export function LinkRow({
+  to,
+  icon,
+  title,
+  sub,
+  count,
+}: {
+  to: string;
+  icon: IconName;
+  title: string;
+  sub: string;
+  count?: number;
+}) {
+  return (
+    <Link viewTransition className="list-row" to={to}>
+      <span className="who-av">
+        <Icon name={icon} small />
+      </span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <b>{title}</b>
+        <span className="sub">{sub}</span>
+      </span>
+      {count ? <span className="count-pill">{count}</span> : null}
+      <Icon name="chev" small />
     </Link>
   );
 }

@@ -1,6 +1,7 @@
 import { Form, Link, data, redirect, useNavigation } from "react-router";
 
 import { ConfirmButton } from "~/components/controls";
+import { PillGroup } from "~/components/pill-group";
 import { Credit, Icon, TopBar } from "~/components/ui";
 import { agoLabel } from "~/lib/announcements";
 import { requireProfile } from "~/lib/auth.server";
@@ -8,6 +9,7 @@ import {
   BOARD_DATIVE,
   BOARD_LABELS,
   STATUS_LABELS,
+  STATUS_TONE,
   TASK_STATUSES,
   isTaskStatus,
   otherBoard,
@@ -47,6 +49,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     public: found.task.public,
     created: ago(found.task.createdAt),
     done: found.task.doneAt ? ago(found.task.doneAt) : null,
+    assignees: found.task.assignees,
   };
   if (!found.full)
     return {
@@ -62,7 +65,6 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
       ...base,
       details: found.task.details,
       author: found.task.author,
-      assignees: found.task.assignees,
     },
     mine: found.mine,
     canDelete: found.canDelete,
@@ -114,6 +116,7 @@ export default function TaskPage({
   const p = loaderData;
   const t = p.task;
   const busy = useNavigation().state === "submitting";
+  const other = BOARD_DATIVE[otherBoard(t.board)];
   return (
     <>
       <TopBar back={`/board?b=${t.board}`} title={BOARD_LABELS[t.board]} />
@@ -126,11 +129,11 @@ export default function TaskPage({
 
       <article className="glass ann-detail">
         <div className="ann-detail-top">
-          <span className={`task-status s-${t.status}`}>
+          <span className={`st ${STATUS_TONE[t.status]}`}>
             {STATUS_LABELS[t.status]}
           </span>
           {!t.public && (
-            <span className="task-private">
+            <span className="ann-flag">
               <Icon name="lock" small />
               Приватна
             </span>
@@ -156,43 +159,44 @@ export default function TaskPage({
         </p>
       </article>
 
+      {p.full && (
+        <Form method="post" className="task-status-form">
+          <input type="hidden" name="intent" value="status" />
+          <PillGroup as="div" className="seg" label="Стан">
+            {TASK_STATUSES.map((s) => (
+              <button
+                data-pill-item
+                key={s}
+                type="submit"
+                name="status"
+                value={s}
+                aria-current={t.status === s ? "true" : undefined}
+                disabled={busy}
+              >
+                {STATUS_LABELS[s]}
+              </button>
+            ))}
+          </PillGroup>
+        </Form>
+      )}
+
+      <div className="glass" style={{ padding: "4px 0", marginTop: 10 }}>
+        <div className="list-row">
+          <span className="who-av">
+            <Icon name="user" small />
+          </span>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <b>{t.assignees.length ? t.assignees.join(", ") : "Поки ніхто"}</b>
+            <span className="sub">Виконують</span>
+          </span>
+        </div>
+      </div>
+
       {p.full ? (
         <>
-          <Form method="post" className="task-status-form">
-            <input type="hidden" name="intent" value="status" />
-            <div className="seg" role="group" aria-label="Стан">
-              {TASK_STATUSES.map((s) => (
-                <button
-                  key={s}
-                  type="submit"
-                  name="status"
-                  value={s}
-                  aria-pressed={t.status === s}
-                  disabled={busy}
-                >
-                  {STATUS_LABELS[s]}
-                </button>
-              ))}
-            </div>
-          </Form>
-
-          <div className="glass task-people">
-            <span className="who-av">
-              <Icon name="user" small />
-            </span>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <b>
-                {p.task.assignees.length
-                  ? p.task.assignees.join(", ")
-                  : "Поки ніхто"}
-              </b>
-              <span className="sub">Виконують</span>
-            </span>
-          </div>
-
-          <div className="task-actions">
+          <div className="home-actions">
             {!p.mine && t.status !== "done" && (
-              <Form method="post">
+              <Form method="post" className="confirm-form">
                 <button
                   className="btn btn-primary block"
                   type="submit"
@@ -200,12 +204,12 @@ export default function TaskPage({
                   value="take"
                   disabled={busy}
                 >
-                  {p.task.assignees.length ? "Долучитися" : "Взяти собі"}
+                  {t.assignees.length ? "Долучитися" : "Взяти собі"}
                 </button>
               </Form>
             )}
             {p.mine && (
-              <Form method="post">
+              <Form method="post" className="confirm-form">
                 <button
                   className="btn btn-soft block"
                   type="submit"
@@ -217,6 +221,20 @@ export default function TaskPage({
                 </button>
               </Form>
             )}
+            <Form method="post" className="confirm-form">
+              <ConfirmButton
+                className="btn btn-soft block"
+                name="intent"
+                value="move"
+                question={`Передати ${other}? Виконавці зміняться.`}
+                yes="Так, передати"
+              >
+                Передати {other}
+              </ConfirmButton>
+            </Form>
+          </div>
+
+          <div className="ann-actions">
             <Link
               viewTransition
               className="btn btn-soft"
@@ -225,17 +243,6 @@ export default function TaskPage({
               <Icon name="pencil" small />
               Змінити
             </Link>
-            <Form method="post" className="confirm-form">
-              <ConfirmButton
-                className="btn btn-soft block"
-                name="intent"
-                value="move"
-                question={`Передати ${BOARD_DATIVE[otherBoard(t.board)]}? Виконавці зміняться.`}
-                yes="Так, передати"
-              >
-                Передати {BOARD_DATIVE[otherBoard(t.board)]}
-              </ConfirmButton>
-            </Form>
             {p.canDelete && (
               <Form method="post" className="confirm-form">
                 <ConfirmButton
@@ -256,20 +263,24 @@ export default function TaskPage({
               <div className="section-h">
                 <h3>Історія</h3>
               </div>
-              <ol className="glass task-history">
+              <div className="glass" style={{ padding: "4px 0" }}>
                 {p.history.map((h) => (
-                  <li key={h.id}>
-                    <b>{h.actor}</b> {h.label}
-                    <small>{h.when}</small>
-                  </li>
+                  <div className="list-row" key={h.id}>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <b>
+                        {h.actor} {h.label}
+                      </b>
+                      <span className="sub">{h.when}</span>
+                    </span>
+                  </div>
                 ))}
-              </ol>
+              </div>
             </section>
           )}
         </>
       ) : (
         <p className="muted" style={{ margin: "14px 4px 0", fontSize: 13.5 }}>
-          Подробиці й виконавців бачать ті, хто веде дошку.
+          Подробиці бачать ті, хто веде дошку.
         </p>
       )}
       <Credit />

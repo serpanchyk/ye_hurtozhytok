@@ -1,7 +1,8 @@
-import { Link } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { Link, useFetchers, useSubmit } from "react-router";
 
 import { PillGroup } from "~/components/pill-group";
-import { Credit, Icon, TopBar } from "~/components/ui";
+import { Credit, Icon, SectionBar } from "~/components/ui";
 import { agoLabel } from "~/lib/announcements";
 import { requireProfile } from "~/lib/auth.server";
 import { isCouncil, isSquad } from "~/lib/permissions";
@@ -13,12 +14,15 @@ import {
   TASK_STATUSES,
   columns,
   isBoard,
+  isTaskStatus,
   readFilter,
   type Board,
   type TaskFilter,
+  type TaskStatus,
 } from "~/lib/tasks";
 import { listBoard } from "~/lib/tasks.server";
 import { kyivDateKey, kyivNow } from "~/lib/time";
+import { useCardDrag } from "~/lib/use-card-drag";
 import { usePolling } from "~/lib/use-polling";
 import type { Route } from "./+types/board";
 
@@ -49,43 +53,96 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       ? "squad"
       : "council";
   const { full, cards } = await listBoard(env, me, board);
-  const filter = full ? readFilter(url.searchParams.get("f")) : "all";
   const today = kyivNow().date;
   const moved = url.searchParams.get("moved");
   return {
+    name: me.name,
+    me: me.id,
     board,
-    filter,
+    filter: full ? readFilter(url.searchParams.get("f")) : "all",
     full,
     moved: isBoard(moved) ? moved : null,
-    columns: columns(
-      cards.map((c) => ({
-        ...c,
-        done: c.doneAt ? agoLabel(kyivDateKey(c.doneAt), today) : null,
-      })),
-      filter,
-      me.id,
-    ),
+    cards: cards.map((c) => ({
+      ...c,
+      done: c.doneAt ? agoLabel(kyivDateKey(c.doneAt), today) : null,
+    })),
   };
+}
+
+/** Cards being moved right now, by id: the board shows them in place at once. */
+function useMoving() {
+  const moving = new Map<number, TaskStatus>();
+  let error: string | null = null;
+  for (const f of useFetchers()) {
+    if (!f.key.startsWith("task-move-")) continue;
+    const id = Number(f.key.slice("task-move-".length));
+    const status = f.formData?.get("status");
+    if (f.state !== "idle" && isTaskStatus(status)) moving.set(id, status);
+    if (f.state === "idle" && f.data?.error) error = f.data.error;
+  }
+  return { moving, error };
 }
 
 export default function BoardPage({ loaderData }: Route.ComponentProps) {
   usePolling(30_000);
-  const { board, filter, full, moved, columns: cols } = loaderData;
+  const { name, me, board, filter, full, moved } = loaderData;
+  const { moving, error } = useMoving();
+  const submit = useSubmit();
+  const cols = columns(
+    loaderData.cards.map((c) => ({
+      ...c,
+      status: moving.get(c.id) ?? c.status,
+    })),
+    filter,
+    me,
+  );
+
+  // The card that has just been dropped pops into its new column.
+  const [landed, setLanded] = useState<number | null>(null);
+  useEffect(() => {
+    if (landed === null) return;
+    const t = setTimeout(() => setLanded(null), 600);
+    return () => clearTimeout(t);
+  }, [landed]);
+
+  const colsRef = useRef<HTMLDivElement>(null);
+  useCardDrag(colsRef, {
+    enabled: full,
+    onDrop: (id, to) => {
+      if (!isTaskStatus(to)) return;
+      setLanded(id);
+      submit(
+        { intent: "status", status: to },
+        {
+          method: "post",
+          action: `/tasks/${id}`,
+          navigate: false,
+          fetcherKey: `task-move-${id}`,
+        },
+      );
+    },
+  });
+
   return (
     <>
-      <TopBar />
+      <SectionBar name={name} />
       <h2 className="title" style={{ marginBottom: 6 }}>
         Дошка
       </h2>
       <p className="lede" style={{ marginBottom: 14 }}>
         {full
-          ? "Картки вашої дошки. Приватні бачать лише ті, хто її веде."
-          : "Над чим працюють студрада й оперзагін."}
+          ? "Картки вашої дошки. Приватні бачать лише ті, хто її веде. Утримайте картку, щоб перетягнути її в іншу колонку."
+          : "Над чим працюють студрада й оперзагін і хто цим займається."}
       </p>
 
       {moved && (
         <p className="ok-note" role="status">
           Картку передано {BOARD_DATIVE[moved]}.
+        </p>
+      )}
+      {error && (
+        <p className="error-note" role="alert">
+          {error}
         </p>
       )}
 
@@ -122,11 +179,12 @@ export default function BoardPage({ loaderData }: Route.ComponentProps) {
         )}
       </div>
 
-      <div className="board-cols">
+      <div className="board-cols" ref={colsRef}>
         {TASK_STATUSES.map((status) => (
           <section
             key={status}
             className="board-col"
+            data-drop={status}
             aria-label={STATUS_LABELS[status]}
           >
             <div className="section-h">
@@ -138,40 +196,48 @@ export default function BoardPage({ loaderData }: Route.ComponentProps) {
                 {cols[status].map((t) => (
                   <Link
                     viewTransition
-                    className="glass task-card"
+                    className={`glass ann-row task-card${t.id === landed ? " is-landed" : ""}`}
                     to={`/tasks/${t.id}`}
                     key={t.id}
+                    data-task={t.id}
+                    data-status={t.status}
+                    data-draggable={full ? "" : undefined}
+                    draggable={false}
                   >
-                    {!t.public && (
-                      <span className="task-private">
-                        <Icon name="lock" small />
-                        Приватна
+                    <span className="ann-row-text">
+                      {!t.public && (
+                        <span className="ann-flag">
+                          <Icon name="lock" small />
+                          Приватна
+                        </span>
+                      )}
+                      <b>{t.title}</b>
+                      <span className="meta">
+                        {t.place && (
+                          <span>
+                            <Icon name="pin" small />
+                            {t.place}
+                          </span>
+                        )}
+                        {t.assignees.length > 0 && (
+                          <span>
+                            <Icon name="user" small />
+                            {t.assignees.join(", ")}
+                          </span>
+                        )}
+                        {full &&
+                          t.assignees.length === 0 &&
+                          status !== "done" && <span>нічия</span>}
+                        {t.done && status === "done" && (
+                          <span>готово {t.done}</span>
+                        )}
                       </span>
-                    )}
-                    <b>{t.title}</b>
-                    <span className="meta">
-                      {t.place && (
-                        <span>
-                          <Icon name="pin" small />
-                          {t.place}
-                        </span>
-                      )}
-                      {full && t.assignees.length > 0 && (
-                        <span>
-                          <Icon name="user" small />
-                          {t.assignees.join(", ")}
-                        </span>
-                      )}
-                      {full &&
-                        t.assignees.length === 0 &&
-                        status !== "done" && <span>нічия</span>}
-                      {t.done && <span>готово {t.done}</span>}
                     </span>
                   </Link>
                 ))}
               </div>
             ) : (
-              <p className="task-empty">Порожньо</p>
+              <div className="glass empty">Порожньо</div>
             )}
           </section>
         ))}

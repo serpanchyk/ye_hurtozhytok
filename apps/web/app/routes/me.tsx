@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-import { Credit, Icon, type IconName } from "~/components/ui";
+import { Credit, Icon, LinkRow } from "~/components/ui";
 import { StatusPill } from "~/components/announcement";
 import { listMine } from "~/lib/announcements.server";
 import { requireProfile } from "~/lib/auth.server";
@@ -44,31 +44,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       running: b.date === now.date && b.startMin <= now.minute,
     })),
   };
-}
-
-function Row({
-  to,
-  icon,
-  title,
-  sub,
-}: {
-  to: string;
-  icon: IconName;
-  title: string;
-  sub: string;
-}) {
-  return (
-    <Link viewTransition className="list-row" to={to}>
-      <span className="who-av">
-        <Icon name={icon} small />
-      </span>
-      <span style={{ flex: 1, minWidth: 0 }}>
-        <b>{title}</b>
-        <span className="sub">{sub}</span>
-      </span>
-      <Icon name="chev" small />
-    </Link>
-  );
 }
 
 export default function Me({ loaderData }: Route.ComponentProps) {
@@ -183,7 +158,7 @@ export default function Me({ loaderData }: Route.ComponentProps) {
         <h3>Налаштування</h3>
       </div>
       <div className="glass" style={{ padding: "4px 0" }}>
-        <Row
+        <LinkRow
           to="/profile"
           icon="user"
           title="Профіль і сповіщення"

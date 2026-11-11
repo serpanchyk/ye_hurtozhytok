@@ -17,6 +17,39 @@ import {
  * screen readers announce them as usual.
  */
 
+/** A labelled form field with an optional mark, an error or a hint below. */
+export function FormField({
+  id,
+  label,
+  optional,
+  error,
+  hint,
+  children,
+}: {
+  id: string;
+  label: string;
+  optional?: boolean;
+  error?: string;
+  hint?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="field-row">
+      <label htmlFor={id}>
+        {label} {optional && <span className="opt">необовʼязково</span>}
+      </label>
+      {children}
+      {error ? (
+        <small className="field-error" id={`${id}-error`}>
+          {error}
+        </small>
+      ) : (
+        hint && <small id={`${id}-hint`}>{hint}</small>
+      )}
+    </div>
+  );
+}
+
 /** A checkbox drawn in the app's style. */
 export function Check({
   name,

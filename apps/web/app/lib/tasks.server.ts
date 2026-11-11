@@ -51,8 +51,8 @@ async function assigneesOf(
 
 /**
  * The board as this person may see it: everything for those who keep it,
- * otherwise public cards without people. Open cards newest first, then the
- * last finished ones.
+ * otherwise public cards. Everyone sees who works on a card. Open cards
+ * newest first, then the last finished ones.
  */
 export async function listBoard(env: Env, actor: Actor, board: Board) {
   const db = getDb(env);
@@ -80,12 +80,10 @@ export async function listBoard(env: Env, actor: Actor, board: Board) {
       .all(),
   ]);
   const all = [...open, ...done];
-  const people = full
-    ? await assigneesOf(
-        db,
-        all.map((t) => t.id),
-      )
-    : new Map<number, Person[]>();
+  const people = await assigneesOf(
+    db,
+    all.map((t) => t.id),
+  );
   return {
     full,
     cards: all.map((t) => {
@@ -111,6 +109,7 @@ export async function getTask(env: Env, actor: Actor, id: number) {
   const t = await db.select().from(tasks).where(eq(tasks.id, id)).get();
   if (!t || !canSeeTask(actor, t)) return null;
   const full = canManageBoard(actor, t.board);
+  const assignees = (await assigneesOf(db, [id])).get(id) ?? [];
   if (!full)
     return {
       full: false as const,
@@ -123,11 +122,11 @@ export async function getTask(env: Env, actor: Actor, id: number) {
         public: t.public,
         createdAt: t.createdAt,
         doneAt: t.doneAt,
+        assignees: assignees.map((p) => p.name),
       },
     };
 
-  const [people, author, history] = await Promise.all([
-    assigneesOf(db, [id]),
+  const [author, history] = await Promise.all([
     db
       .select({ name: residents.name })
       .from(residents)
@@ -147,7 +146,6 @@ export async function getTask(env: Env, actor: Actor, id: number) {
       .orderBy(desc(activityLog.createdAt))
       .all(),
   ]);
-  const assignees = people.get(id) ?? [];
   return {
     full: true as const,
     task: {

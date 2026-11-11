@@ -1,6 +1,6 @@
 import { Form, useNavigation } from "react-router";
 
-import { Check } from "~/components/controls";
+import { Check, FormField } from "~/components/controls";
 import {
   DETAILS_MAX,
   PLACE_MAX,
@@ -15,23 +15,8 @@ type Initial = {
   public: boolean;
 };
 
-function Hint({
-  id,
-  error,
-  hint,
-}: {
-  id: string;
-  error?: string;
-  hint?: string;
-}) {
-  if (error)
-    return (
-      <small className="field-error" id={`${id}-error`}>
-        {error}
-      </small>
-    );
-  return hint ? <small>{hint}</small> : null;
-}
+const described = (id: string, error?: string, hint?: boolean) =>
+  error ? `${id}-error` : hint ? `${id}-hint` : undefined;
 
 /** A card: what to do, where, details for those who keep the board, visibility. */
 export function TaskForm({
@@ -46,8 +31,7 @@ export function TaskForm({
   const busy = useNavigation().state === "submitting";
   return (
     <Form method="post" className="glass form">
-      <div className="field-row">
-        <label htmlFor="title">Що зробити</label>
+      <FormField id="title" label="Що зробити" error={errors?.title}>
         <input
           id="title"
           name="title"
@@ -56,14 +40,10 @@ export function TaskForm({
           required
           placeholder="Замінити лампу в коридорі"
           aria-invalid={errors?.title ? true : undefined}
-          aria-describedby={errors?.title ? "title-error" : undefined}
+          aria-describedby={described("title", errors?.title)}
         />
-        <Hint id="title" error={errors?.title} />
-      </div>
-      <div className="field-row">
-        <label htmlFor="place">
-          Де <span className="opt">необовʼязково</span>
-        </label>
+      </FormField>
+      <FormField id="place" label="Де" optional error={errors?.place}>
         <input
           id="place"
           name="place"
@@ -71,14 +51,16 @@ export function TaskForm({
           maxLength={PLACE_MAX}
           placeholder="3 поверх"
           aria-invalid={errors?.place ? true : undefined}
-          aria-describedby={errors?.place ? "place-error" : undefined}
+          aria-describedby={described("place", errors?.place)}
         />
-        <Hint id="place" error={errors?.place} />
-      </div>
-      <div className="field-row">
-        <label htmlFor="details">
-          Подробиці <span className="opt">необовʼязково</span>
-        </label>
+      </FormField>
+      <FormField
+        id="details"
+        label="Подробиці"
+        optional
+        error={errors?.details}
+        hint="Бачать лише ті, хто веде дошку."
+      >
         <textarea
           id="details"
           name="details"
@@ -87,19 +69,14 @@ export function TaskForm({
           defaultValue={initial.details ?? ""}
           maxLength={DETAILS_MAX}
           aria-invalid={errors?.details ? true : undefined}
-          aria-describedby={errors?.details ? "details-error" : "details-hint"}
+          aria-describedby={described("details", errors?.details, true)}
         />
-        {errors?.details ? (
-          <Hint id="details" error={errors.details} />
-        ) : (
-          <small id="details-hint">Бачать лише ті, хто веде дошку.</small>
-        )}
-      </div>
+      </FormField>
       <Check
         name="public"
         defaultChecked={initial.public}
         title="Публічна"
-        hint="Назву, місце й статус побачать усі мешканці. Подробиці й виконавців — лише ви."
+        hint="Назву, місце, стан і виконавців побачать усі мешканці. Подробиці — лише ви."
       />
       <button className="btn btn-primary block" type="submit" disabled={busy}>
         {submitLabel}

@@ -7,12 +7,12 @@ import {
   Port,
   StripScale,
   Ticket,
+  SectionBar,
 } from "~/components/ui";
 import { requireProfile } from "~/lib/auth.server";
 import { MAX_ACTIVE, countdown, fmtMin, machineNow } from "~/lib/booking";
 import { upcomingFor } from "~/lib/bookings.server";
 import { machinesOn } from "~/lib/day.server";
-import { initials } from "~/lib/profile";
 import { dayHeading, kyivMinuteToUtc, kyivNow } from "~/lib/time";
 import { usePolling } from "~/lib/use-polling";
 import type { Route } from "./+types/laundry";
@@ -93,22 +93,7 @@ export default function Laundry({ loaderData }: Route.ComponentProps) {
   const { name, blocked, full, machines, next, more, now } = loaderData;
   return (
     <>
-      <div className="topbar">
-        <span className="brand">
-          <svg className="mark" aria-hidden="true">
-            <use href="#logo-facade" />
-          </svg>
-          <span className="wordmark">єГуртожиток</span>
-        </span>
-        <Link
-          className="avatar"
-          to="/me"
-          aria-label={`Моє: ${name}`}
-          style={{ textDecoration: "none" }}
-        >
-          {initials(name)}
-        </Link>
-      </div>
+      <SectionBar name={name} />
       <h2 className="title" style={{ marginBottom: 16 }}>
         Пральня
       </h2>

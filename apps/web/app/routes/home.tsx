@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 
 import { AnnouncementRow, ImportantCard } from "~/components/announcement";
-import { Credit, Icon } from "~/components/ui";
+import { Credit, Icon, SectionBar } from "~/components/ui";
 import { agoLabel, feedSections } from "~/lib/announcements";
 import { countPending, listPublished } from "~/lib/announcements.server";
 import { requireProfile } from "~/lib/auth.server";
@@ -9,7 +9,7 @@ import {
   canProposeAnnouncement,
   canPublishAnnouncements,
 } from "~/lib/permissions";
-import { initials, vocative } from "~/lib/profile";
+import { vocative } from "~/lib/profile";
 import { kyivDateKey, kyivNow } from "~/lib/time";
 import { usePolling } from "~/lib/use-polling";
 import type { Route } from "./+types/home";
@@ -51,22 +51,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const empty = p.important.length + p.upcoming.length + p.fresh.length === 0;
   return (
     <>
-      <div className="topbar">
-        <span className="brand">
-          <svg className="mark" aria-hidden="true">
-            <use href="#logo-facade" />
-          </svg>
-          <span className="wordmark">єГуртожиток</span>
-        </span>
-        <Link
-          className="avatar"
-          to="/me"
-          aria-label={`Моє: ${p.name}`}
-          style={{ textDecoration: "none" }}
-        >
-          {initials(p.name)}
-        </Link>
-      </div>
+      <SectionBar name={p.name} />
       <h2 className="title" style={{ marginBottom: 16 }}>
         {first ? `Привіт, ${first}` : "Привіт!"}
       </h2>

@@ -2,7 +2,12 @@ import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { Form, useNavigation } from "react-router";
 
 import { mediaUrl } from "~/components/announcement";
-import { Check, DateField, TimeField } from "~/components/controls";
+import {
+  Check,
+  DateField,
+  FormField as Field,
+  TimeField,
+} from "~/components/controls";
 import { Icon } from "~/components/ui";
 import {
   BODY_MAX,
@@ -52,38 +57,6 @@ async function shrink(file: File): Promise<File> {
   } catch {
     return file;
   }
-}
-
-function Field({
-  id,
-  label,
-  optional,
-  error,
-  hint,
-  children,
-}: {
-  id: string;
-  label: string;
-  optional?: boolean;
-  error?: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="field-row">
-      <label htmlFor={id}>
-        {label} {optional && <span className="opt">необовʼязково</span>}
-      </label>
-      {children}
-      {error ? (
-        <small className="field-error" id={`${id}-error`}>
-          {error}
-        </small>
-      ) : (
-        hint && <small>{hint}</small>
-      )}
-    </div>
-  );
 }
 
 // Client only: the server never renders the editor, so it stays out of the Worker.
