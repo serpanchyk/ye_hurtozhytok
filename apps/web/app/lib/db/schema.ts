@@ -369,6 +369,14 @@ export const activityLog = sqliteTable(
   ],
 );
 
+// Small app-wide values as JSON: the squad's Telegram group, how far the bot
+// has read the activity log, which daily messages it has sent.
+export const settings = sqliteTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+});
+
 export type Resident = typeof residents.$inferSelect;
 export type RoleGrant = typeof roleGrants.$inferSelect;
 export type Announcement = typeof announcements.$inferSelect;

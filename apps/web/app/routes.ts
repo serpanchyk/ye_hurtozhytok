@@ -14,6 +14,7 @@ export default [
   route("push", "routes/push.ts"),
   route("bookings/:id/calendar.ics", "routes/booking-ics.ts"),
   route("media/*", "routes/media.ts"),
+  route("telegram/webhook", "routes/telegram-webhook.ts"),
   layout("routes/app-layout.tsx", [
     index("routes/home.tsx"),
     route("announcements", "routes/announcements.tsx"),
@@ -41,6 +42,7 @@ export default [
     route("work/patrols/new", "routes/work-patrol-new.tsx"),
     route("work/patrols/:id/edit", "routes/work-patrol-edit.tsx"),
     route("work/complaints", "routes/work-complaints.tsx"),
+    route("work/telegram", "routes/work-telegram.tsx"),
     route("work/complaints/:id", "routes/work-complaint.tsx"),
     route("work/announcements/new", "routes/announcement-new.tsx", {
       id: "work-announcement-new",

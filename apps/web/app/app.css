@@ -3870,6 +3870,30 @@ html:not(.booted) .ticket::after,
   display: flex;
 }
 
+/* Connecting the squad's Telegram group: numbered steps and the command. */
+.bot-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 16px 16px 16px 36px;
+  font-size: 15px;
+}
+.bot-command {
+  display: block;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--shadow-gloss);
+  font:
+    600 14px/1.3 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
 .stat-total {
   font-family: var(--font-display);
   font-weight: 900;

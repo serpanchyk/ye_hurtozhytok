@@ -206,6 +206,11 @@ export function canExportSquad(actor: WithRoles): boolean {
   return isSiteManager(actor);
 }
 
+/** The squad's Telegram group is connected and looked after by the site manager. */
+export function canSetUpBot(actor: WithRoles): boolean {
+  return isSiteManager(actor);
+}
+
 /** Everyone in the squad stands duty. */
 export function canStandShift(person: WithRoles): boolean {
   return isSquad(person);

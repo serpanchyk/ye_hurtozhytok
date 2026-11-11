@@ -5,10 +5,17 @@ import { dueReminders } from "./bookings.server";
 import { getDb } from "./db";
 import { bookings, machines } from "./db/schema";
 import { drainOutbox, notify, pushEnabled } from "./push.server";
+import { runSquadBot } from "./squad-bot.server";
 import { addDays, dateLong, kyivDateKey } from "./time";
 
-/** Runs every minute: booking reminders, then the next batch of queued messages. */
+/**
+ * Runs every minute: the squad's Telegram news, booking reminders, then the
+ * next batch of queued messages.
+ */
 export async function runEveryMinute(env: Env, scheduledTime: number) {
+  await runSquadBot(env, scheduledTime).catch((error) =>
+    console.error("squad bot failed", error),
+  );
   if (!pushEnabled(env)) return;
   try {
     await sendReminders(env, scheduledTime);

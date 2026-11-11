@@ -6,6 +6,7 @@ import { listAppComplaints } from "~/lib/complaints.server";
 import { requireProfile } from "~/lib/auth.server";
 import { canDecideAnnouncements, canExportSquad } from "~/lib/permissions";
 import { workSectionsFor } from "~/lib/sections";
+import { squadChat } from "~/lib/telegram.server";
 import { rememberSection } from "~/lib/work-section.server";
 import type { Route } from "./+types/work";
 
@@ -33,6 +34,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
           : 0,
       appComplaints:
         section === "manager" ? (await listAppComplaints(env)).length : 0,
+      group: section === "manager" ? (await squadChat(env))?.title : null,
     },
     // Pages several sections share lead back to this one.
     { headers: { "Set-Cookie": await rememberSection(section) } },
@@ -78,7 +80,7 @@ function NewAnnouncementRow() {
 }
 
 export default function Work({ loaderData }: Route.ComponentProps) {
-  const { label, section, pending, appComplaints, exports } = loaderData;
+  const { label, section, pending, appComplaints, exports, group } = loaderData;
   return (
     <>
       <TopBar back="/services" />
@@ -138,6 +140,12 @@ export default function Work({ loaderData }: Route.ComponentProps) {
               title="Звернення про застосунок"
               sub={appComplaints ? "Чекають відповіді" : "Нових немає"}
               count={appComplaints}
+            />
+            <LinkRow
+              to="/work/telegram"
+              icon="mail"
+              title="Telegram-група"
+              sub={group ? `Бот пише в «${group}»` : "Не підключено"}
             />
             {exports && (
               <a className="list-row" href="/work/export" download>

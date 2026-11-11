@@ -72,7 +72,10 @@ docs in the same change.
   `/services`, `/laundry` and `/machines/*` (and their `.data`) plus `/media/*` pictures
   for offline reading, never other personal pages; logout clears the cache.
   Bump `CACHE` in `public/sw.js` when caching rules change.
-- Reminders are Web Push only; email needs an own domain and is not built.
+- Reminders to residents are Web Push only; email needs an own domain and is
+  not built. The squad's Telegram group gets its news from the bot, which reads
+  `activity_log` every minute (`lib/squad-bot.server.ts`); a change needs no
+  extra call to reach it, only its activity entry.
 
 ## Testing And Checks
 

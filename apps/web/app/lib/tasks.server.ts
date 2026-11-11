@@ -253,7 +253,7 @@ export async function setTaskStatus(
     action: "task.status",
     entity: "task",
     entityId: id,
-    details: { status },
+    details: { from: t.status, status },
   });
   return true;
 }

@@ -12,6 +12,7 @@ import {
   canCancel,
   canDeleteTask,
   canExportSquad,
+  canSetUpBot,
   canManageBoard,
   canSeeTask,
   canManageRoles,
@@ -223,6 +224,8 @@ describe("permissions", () => {
       expect(canExportSquad(manager)).toBe(true);
       expect(canExportSquad(squadHead)).toBe(false);
       expect(canExportSquad(squad)).toBe(false);
+      expect(canSetUpBot(manager)).toBe(true);
+      expect(canSetUpBot(squadHead)).toBe(false);
     });
   });
 });

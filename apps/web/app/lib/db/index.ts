@@ -43,7 +43,9 @@ export type ActivityAction =
   | "patrol.recorded"
   | "patrol.planned"
   | "patrol.edited"
-  | "patrol.deleted";
+  | "patrol.deleted"
+  | "telegram.connected"
+  | "telegram.disconnected";
 
 export function activity(
   db: Db,
@@ -58,7 +60,8 @@ export function activity(
       | "task"
       | "complaint"
       | "shift"
-      | "patrol";
+      | "patrol"
+      | "telegram";
     entityId: number;
     details?: Record<string, unknown>;
   },
