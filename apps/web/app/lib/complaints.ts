@@ -85,8 +85,8 @@ export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = {
 /** Status pill tones, the same pills as cards and announcements. */
 export const COMPLAINT_STATUS_TONE: Record<ComplaintStatus, string> = {
   sent: "new",
-  in_progress: "review",
-  resolved: "ok",
+  in_progress: "work",
+  resolved: "done",
   rejected: "no",
 };
 

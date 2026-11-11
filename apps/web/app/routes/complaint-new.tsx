@@ -115,7 +115,7 @@ export default function NewComplaint({ actionData }: Route.ComponentProps) {
           <div className="topic-group" data-to={r.id} key={r.id}>
             <ChoiceChips
               name="topic"
-              legend={`Що сталося · ${r.label}`}
+              legend="Що сталося"
               columns={2}
               defaultValue={typed?.topic}
               options={TOPICS_FOR[r.id].map((t) => ({

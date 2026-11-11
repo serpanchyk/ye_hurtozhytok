@@ -147,13 +147,16 @@ export default function WorkBoard({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <TopBar back={`/work?s=${board}`} title={BOARD_LABELS[board]} />
+      {/* With the board switch below, the top bar need not name the board. */}
+      <TopBar
+        back={`/work?s=${board}`}
+        title={boards.length > 1 ? undefined : BOARD_LABELS[board]}
+      />
       <h2 className="title" style={{ marginBottom: 6 }}>
         Робоча дошка
       </h2>
       <p className="lede" style={{ marginBottom: 14 }}>
-        Усі картки, приватні теж. Утримайте картку, щоб перетягнути її в іншу
-        колонку.
+        Утримайте картку, щоб перенести її.
       </p>
       <Link
         viewTransition
@@ -184,17 +187,25 @@ export default function WorkBoard({ loaderData }: Route.ComponentProps) {
             query={(b) => query(b, filter)}
           />
         )}
-        <PillGroup className="seg" label="Які картки">
+        {/* Filters are chips with counts, chosen in ink, as on «Мешканці». */}
+        <PillGroup className="filter-row" label="Які картки">
           {FILTERS.map((f) => (
             <Link
               data-pill-item
               key={f.id}
+              className="chip"
               to={query(board, f.id)}
               replace
               preventScrollReset
               aria-current={f.id === filter ? "true" : undefined}
             >
               {f.label}
+              <small>
+                {Object.values(columns(loaderData.cards, f.id, me)).reduce(
+                  (n, c) => n + c.length,
+                  0,
+                )}
+              </small>
             </Link>
           ))}
         </PillGroup>

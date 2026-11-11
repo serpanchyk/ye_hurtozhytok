@@ -46,10 +46,6 @@ export function ComplaintDetails({
       <article className="glass ann-detail">
         <div className="ann-detail-top">
           <ComplaintPill status={c.status} />
-          <span className="ann-flag">
-            <Icon name="mail" small />
-            {c.topicLabel}
-          </span>
         </div>
         <h2>{c.title}</h2>
         <p className="task-details">{c.body}</p>

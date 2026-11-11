@@ -113,13 +113,24 @@ export default function Schedule({
           <div className="section-h">
             <h3>{d.label}</h3>
           </div>
-          {!d.duty && (
+          {!d.duty && d.patrols.length === 0 && (
             <p className="muted" style={{ margin: "0 4px 8px" }}>
               Вахт немає
             </p>
           )}
           {(d.duty || d.patrols.length > 0) && (
             <div className="glass" style={{ padding: "4px 0" }}>
+              {/* A Friday patrol: say there is no duty inside the day, not above it. */}
+              {!d.duty && (
+                <div className="list-row">
+                  <span className="who-av">
+                    <Icon name="shield" small />
+                  </span>
+                  <span className="muted" style={{ flex: 1, minWidth: 0 }}>
+                    Вахти немає
+                  </span>
+                </div>
+              )}
               {d.duty && (
                 <div className="list-row">
                   <span
@@ -135,7 +146,7 @@ export default function Schedule({
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <b>
                       {d.shift
-                        ? (d.shift.name ?? "Вільна вахта")
+                        ? (d.shift.name ?? "Вільно")
                         : d.past
                           ? "Вахти не було"
                           : "Вахти ще немає"}
@@ -173,7 +184,7 @@ export default function Schedule({
                         // Taking someone else off asks first, like cancelling a booking.
                         <ConfirmButton
                           variant="arm"
-                          className="pill-btn danger"
+                          className="pill-btn"
                           name="intent"
                           value="leave"
                           label={`Зняти з вахти: ${d.shift.name}, ${d.label}`}

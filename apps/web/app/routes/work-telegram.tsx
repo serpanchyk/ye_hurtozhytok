@@ -185,9 +185,9 @@ export default function WorkTelegram({
 
       {!d.bot ? (
         <div className="glass empty">
-          <b>Бота ще не налаштовано</b>
-          Створіть бота в @BotFather і додайте його токен секретом
-          TELEGRAM_BOT_TOKEN: npx wrangler secret put TELEGRAM_BOT_TOKEN.
+          <b>Бота ще не підключено</b>
+          Напишіть розробникові: боту потрібен токен (як це зробити — у
+          docs/run-project.md).
         </div>
       ) : d.chat ? (
         <>

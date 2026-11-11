@@ -33,8 +33,8 @@ export const STATUS_LABELS: Record<TaskStatus, string> = {
 /** Status pill tones; «В роботі» is amber like everything else in work. */
 export const STATUS_TONE: Record<TaskStatus, string> = {
   new: "new",
-  in_progress: "review",
-  done: "ok",
+  in_progress: "work",
+  done: "done",
 };
 
 export function isBoard(value: unknown): value is Board {

@@ -97,9 +97,15 @@ export function BoardColumns({
                   draggable={false}
                 >
                   <span className="ann-row-text">
-                    {!t.public && <PrivateFlag />}
                     <b>{t.title}</b>
                     <span className="meta">
+                      {/* Quietly, in the meta row: most squad cards are private. */}
+                      {!t.public && (
+                        <span>
+                          <Icon name="lock" small />
+                          <span className="sr-only">Приватна</span>
+                        </span>
+                      )}
                       {t.place && (
                         <span>
                           <Icon name="pin" small />
