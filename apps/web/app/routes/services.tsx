@@ -49,21 +49,14 @@ function Tile({
   icon,
   title,
   count,
-  work = false,
 }: {
   to: string;
   icon: IconName;
   title: string;
   count?: number;
-  /** A work section's tile: dark, so it never passes for a service. */
-  work?: boolean;
 }) {
   return (
-    <Link
-      viewTransition
-      className={`glass service-tile${work ? " is-work" : ""}`}
-      to={to}
-    >
+    <Link viewTransition className="glass service-tile" to={to}>
       <span className="who-av">
         <Icon name={icon} small />
       </span>
@@ -93,10 +86,10 @@ export default function Services({ loaderData }: Route.ComponentProps) {
       {work.length > 0 && (
         <>
           <div className="section-h">
-            <h3>Робота</h3>
+            <h3>Праця</h3>
             <span className="muted">для вашої ролі</span>
           </div>
-          <nav className="service-grid" aria-label="Робота">
+          <nav className="service-grid" aria-label="Праця">
             {work.map((s) => (
               <Tile
                 key={s.id}
@@ -104,7 +97,6 @@ export default function Services({ loaderData }: Route.ComponentProps) {
                 icon={s.icon}
                 title={s.label}
                 count={waiting[s.id]}
-                work
               />
             ))}
           </nav>

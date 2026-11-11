@@ -3820,16 +3820,6 @@ html:not(.booted) .ticket::after,
   top: 14px;
   right: 14px;
 }
-/* Work sections sit apart under «Робота», dark like a chosen day. */
-.service-tile.is-work {
-  background: var(--ink);
-  color: #fff;
-  box-shadow: 0 10px 20px -10px rgb(16 18 23 / 0.55);
-}
-.service-tile.is-work .who-av {
-  background: rgb(255 255 255 / 0.12);
-  box-shadow: none;
-}
 
 /* ---------- a complaint: «Кому», then that recipient's topics ---------- */
 /* Radio labels as a segmented control: without JavaScript the checked one
