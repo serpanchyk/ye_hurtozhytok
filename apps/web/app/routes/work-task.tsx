@@ -231,7 +231,7 @@ export default function WorkTaskPage({
           Змінити
         </Link>
         {canDelete && (
-          <Form method="post" className="confirm-form">
+          <Form method="post" replace className="confirm-form">
             <ConfirmButton
               className="btn btn-ghost-danger block"
               name="intent"

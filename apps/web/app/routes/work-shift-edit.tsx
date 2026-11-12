@@ -83,7 +83,12 @@ export default function EditShift({
         errors={actionData?.errors}
         submitLabel="Зберегти"
       />
-      <Form method="post" className="confirm-form" style={{ marginTop: 10 }}>
+      <Form
+        method="post"
+        replace
+        className="confirm-form"
+        style={{ marginTop: 10 }}
+      >
         <ConfirmButton
           className="btn btn-ghost-danger block"
           name="intent"

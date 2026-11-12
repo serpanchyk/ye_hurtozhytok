@@ -84,7 +84,7 @@ export default function AnnouncementPage({
             <Icon name="pencil" small />
             Змінити
           </Link>
-          <Form method="post" className="confirm-form">
+          <Form method="post" replace className="confirm-form">
             <ConfirmButton
               className="btn btn-ghost-danger block"
               name="intent"

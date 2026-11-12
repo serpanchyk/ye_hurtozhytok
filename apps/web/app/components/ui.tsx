@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 
+import { backSteps } from "~/lib/back";
 import { SECTIONS, type Tab } from "~/lib/sections";
 
 import {
@@ -274,9 +275,25 @@ export function Field() {
   return <div className="field" aria-hidden="true" />;
 }
 
+/**
+ * Back the way the person came (skipping sent forms); `to` is where it leads
+ * when there is no way back in this tab, and without JavaScript.
+ */
 export function BackButton({ to }: { to: string }) {
+  const navigate = useNavigate();
   return (
-    <Link className="icon-btn" to={to} aria-label="Назад" viewTransition>
+    <Link
+      className="icon-btn"
+      to={to}
+      aria-label="Назад"
+      viewTransition
+      onClick={(e) => {
+        const steps = backSteps();
+        if (steps === null) return;
+        e.preventDefault();
+        void navigate(steps);
+      }}
+    >
       <Icon name="back" />
     </Link>
   );

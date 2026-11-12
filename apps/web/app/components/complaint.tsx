@@ -133,7 +133,7 @@ export function ComplaintActions({
       {isOpen(status) && (
         <details className="glass reject">
           <summary>Відхилити з поясненням</summary>
-          <Form method="post" className="form">
+          <Form method="post" replace className="form">
             <input type="hidden" name="complaint" value={id} />
             <FormField id="reject-reply" label="Чому">
               <textarea

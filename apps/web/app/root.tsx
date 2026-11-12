@@ -11,6 +11,7 @@ import {
 
 import type { Route } from "./+types/root";
 import { Field, IconSprite } from "./components/ui";
+import { useRememberPlaces } from "./lib/back";
 import { NonceContext } from "./lib/csp";
 import "./app.css";
 
@@ -61,6 +62,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  useRememberPlaces();
   return <Outlet />;
 }
 
