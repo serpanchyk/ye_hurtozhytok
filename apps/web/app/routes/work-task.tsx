@@ -236,7 +236,11 @@ export default function WorkTaskPage({
               className="btn btn-ghost-danger block"
               name="intent"
               value="delete"
-              question="Видалити картку? Її більше ніхто не побачить."
+              question={
+                complaint
+                  ? "Видалити картку разом зі зверненням? Його не побачить і автор."
+                  : "Видалити картку? Її більше ніхто не побачить."
+              }
               yes="Так, видалити"
             >
               Видалити

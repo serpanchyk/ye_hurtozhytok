@@ -5,12 +5,14 @@ import { isComplaintCard } from "./complaints.server";
 import { activity, getDb, type Db } from "./db";
 import {
   activityLog,
+  complaints,
   residents,
   taskAssignees,
   tasks,
   type Task,
 } from "./db/schema";
 import {
+  canDeleteComplaintCard,
   canDeleteTask,
   canManageBoard,
   canSeeTask,
@@ -146,7 +148,9 @@ export async function getTask(env: Env, actor: Actor, id: number) {
     },
     mine: assignees.some((p) => p.id === actor.id),
     // A card from a complaint is turned down, never deleted.
-    canDelete: canDeleteTask(actor, t) && !(await isComplaintCard(env, id)),
+    canDelete:
+      canDeleteTask(actor, t) &&
+      (!(await isComplaintCard(env, id)) || canDeleteComplaintCard(actor)),
     history: history.map((h) => ({
       id: h.id,
       actor: h.actor,
@@ -214,8 +218,8 @@ export async function updateTask(
   if (!t) return null;
   const parsed = parseTaskForm(form);
   if (!parsed.ok) return parsed;
-  // A complaint's card stays private: the room it names is nobody's business.
-  if (await isComplaintCard(env, id)) parsed.values.public = false;
+  // A complaint's card is always public (its author and text never are).
+  if (await isComplaintCard(env, id)) parsed.values.public = true;
   // Moved to another board while the form was open: its new board decided
   // who sees it, the old form does not.
   else if (form.get("board") && form.get("board") !== t.board)
@@ -348,12 +352,14 @@ export async function moveTask(
   const t = await managedTask(db, actor, id);
   if (!t) return null;
   const to = otherBoard(t.board);
+  const complaint = await isComplaintCard(env, id);
   await db.delete(taskAssignees).where(eq(taskAssignees.taskId, id));
   await db
     .update(tasks)
     .set({
       board: to,
-      public: t.public && defaultPublic(to),
+      // A complaint's card stays public on any board.
+      public: complaint || (t.public && defaultPublic(to)),
       status: t.status === "done" ? "done" : "new",
       updatedAt: Date.now(),
     })
@@ -375,12 +381,28 @@ export async function deleteTask(
 ): Promise<Board | null> {
   const db = getDb(env);
   const t = await db.select().from(tasks).where(eq(tasks.id, id)).get();
-  if (!t || !canDeleteTask(actor, t) || (await isComplaintCard(env, id)))
-    return null;
+  if (!t || !canDeleteTask(actor, t)) return null;
+  const complaint = await db
+    .select({ id: complaints.id })
+    .from(complaints)
+    .where(eq(complaints.taskId, id))
+    .get();
+  if (complaint && !canDeleteComplaintCard(actor)) return null;
   await db
     .update(tasks)
     .set({ deletedAt: Date.now() })
     .where(and(eq(tasks.id, id), isNull(tasks.deletedAt)));
+  // The complaint goes with its card: gone for its author too, out of their limit.
+  if (complaint) {
+    await db.delete(complaints).where(eq(complaints.id, complaint.id));
+    await activity(db, {
+      actorId: actor.id,
+      action: "complaint.deleted",
+      entity: "complaint",
+      entityId: complaint.id,
+      details: { title: t.title },
+    });
+  }
   await activity(db, {
     actorId: actor.id,
     action: "task.deleted",

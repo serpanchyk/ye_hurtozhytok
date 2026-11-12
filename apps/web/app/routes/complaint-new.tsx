@@ -153,7 +153,8 @@ export default function NewComplaint({ actionData }: Route.ComponentProps) {
         </FormField>
         <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
           Ті, кому ви пишете, побачать ваше імʼя, кімнату й Telegram, щоб
-          уточнити деталі. Іншим мешканцям звернення не видно.
+          уточнити деталі. На дошці всі побачать лише тему, місце й стан, без
+          вашого імені й тексту.
         </p>
         <button className="btn btn-primary block" type="submit" disabled={busy}>
           Надіслати

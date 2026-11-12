@@ -151,6 +151,14 @@ export function canSeeTask(actor: Actor, task: TaskRef): boolean {
   return task.public || canManageBoard(actor, task.board);
 }
 
+/**
+ * A complaint's card goes only with the complaint itself, and only the site
+ * manager removes those (test or junk ones); a real one is turned down.
+ */
+export function canDeleteComplaintCard(actor: WithRoles): boolean {
+  return isSiteManager(actor);
+}
+
 /** The card's author, the board's head and the site manager remove cards. */
 export function canDeleteTask(actor: Actor, task: TaskRef): boolean {
   if (task.deletedAt !== null || !canManageBoard(actor, task.board))

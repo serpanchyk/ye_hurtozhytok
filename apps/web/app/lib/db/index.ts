@@ -46,6 +46,7 @@ export type ActivityAction =
   | "complaint.answered"
   | "complaint.rejected"
   | "complaint.resolved"
+  | "complaint.deleted"
   | "shift.created"
   | "shift.edited"
   | "shift.signed"

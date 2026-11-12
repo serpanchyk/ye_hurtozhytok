@@ -10,6 +10,7 @@ import {
   canSeeResidents,
   canBook,
   canCancel,
+  canDeleteComplaintCard,
   canDeleteTask,
   canExportSquad,
   canSetUpBot,
@@ -212,6 +213,11 @@ describe("permissions", () => {
       expect(canSeeResidents(manager)).toBe(true);
       expect(canSeeResidents(resident)).toBe(false);
       expect(canSeeResidents({ ...squad, blocked: true })).toBe(false);
+    });
+    it("lets only the site manager remove a complaint with its card", () => {
+      expect(canDeleteComplaintCard(manager)).toBe(true);
+      expect(canDeleteComplaintCard(squadHead)).toBe(false);
+      expect(canDeleteComplaintCard(head)).toBe(false);
     });
     it("leaves the squad's Excel to the site manager", () => {
       expect(canExportSquad(manager)).toBe(true);

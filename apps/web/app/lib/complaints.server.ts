@@ -116,7 +116,9 @@ export async function createComplaint(
         board,
         title: cardTitle(topic, place),
         place,
-        public: false,
+        // Every complaint is seen on the public board: topic, place, state
+        // and who works on it; never its author or text.
+        public: true,
         createdBy: actor.id,
         createdAt: now,
         updatedAt: now,

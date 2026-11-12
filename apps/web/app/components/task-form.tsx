@@ -30,7 +30,7 @@ export function TaskForm({
   initial: Initial;
   errors?: TaskErrors;
   submitLabel: string;
-  /** A complaint's card is always private, so it has no switch. */
+  /** A complaint's card is always public, so it has no switch. */
   complaint?: boolean;
 }) {
   const busy = useNavigation().state === "submitting";
