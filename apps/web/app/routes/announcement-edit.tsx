@@ -1,15 +1,18 @@
-import { data, redirect } from "react-router";
+import { Form, data, redirect } from "react-router";
 
 import { AnnouncementForm } from "~/components/announcement-form";
+import { ConfirmButton } from "~/components/controls";
 import { Credit, TopBar } from "~/components/ui";
 import {
+  deleteAnnouncement,
   getAnnouncement,
   updateAnnouncement,
 } from "~/lib/announcements.server";
 import { requireProfile } from "~/lib/auth.server";
 import { canPublishAnnouncements } from "~/lib/permissions";
-import { inWork } from "~/lib/sections";
+import { WORK_SECTIONS, inWork } from "~/lib/sections";
 import { kyivNow } from "~/lib/time";
+import { sectionBack } from "~/lib/work-section.server";
 import type { Route } from "./+types/announcement-edit";
 
 export const handle = { tab: "home" };
@@ -49,18 +52,31 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   const { env, ctx } = context.cloudflare;
   const me = await requireProfile(request, env);
   const id = Number(params.id);
-  const result = await updateAnnouncement(
-    env,
-    ctx,
-    me,
-    id,
-    await request.formData(),
-  );
+  const form = await request.formData();
+  // Removing lives here too: the work pages manage an announcement in one place.
+  if (form.get("intent") === "delete") {
+    if (!(await deleteAnnouncement(env, me, id)))
+      throw new Response("Це оголошення видалити не можна.", { status: 403 });
+    throw redirect(
+      await sectionBack(
+        request,
+        me,
+        WORK_SECTIONS.map((s) => s.id),
+      ),
+    );
+  }
+  const result = await updateAnnouncement(env, ctx, me, id, form);
   if (!result)
     throw new Response("Це оголошення змінити не можна.", { status: 403 });
   if (!result.ok) return data({ errors: result.errors }, { status: 400 });
-  const base = inWork(new URL(request.url).pathname) ? "/work" : "";
-  throw redirect(`${base}/announcements/${id}`);
+  // A proposal still waiting goes back to its decision; anything else to
+  // its page, to see the change.
+  const work = inWork(new URL(request.url).pathname);
+  throw redirect(
+    work && result.status === "pending"
+      ? `/work/announcements/${id}`
+      : `/announcements/${id}`,
+  );
 }
 
 export default function EditAnnouncement({
@@ -70,7 +86,7 @@ export default function EditAnnouncement({
   const { base, id, canPublish, initial, today } = loaderData;
   return (
     <>
-      <TopBar back={`${base}/${id}`} title="Змінити оголошення" />
+      <TopBar back={`/announcements/${id}`} title="Змінити оголошення" />
       <AnnouncementForm
         today={today}
         initial={initial}
@@ -78,6 +94,24 @@ export default function EditAnnouncement({
         errors={actionData?.errors}
         submitLabel="Зберегти"
       />
+      {base === "/work/announcements" && (
+        <Form
+          method="post"
+          replace
+          className="confirm-form"
+          style={{ marginTop: 10 }}
+        >
+          <ConfirmButton
+            className="btn btn-ghost-danger block"
+            name="intent"
+            value="delete"
+            question="Видалити оголошення? Його більше ніхто не побачить."
+            yes="Так, видалити"
+          >
+            Видалити оголошення
+          </ConfirmButton>
+        </Form>
+      )}
       <Credit />
     </>
   );

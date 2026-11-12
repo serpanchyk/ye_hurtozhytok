@@ -102,7 +102,7 @@ export default function AnnouncementPage({
           <Link
             viewTransition
             className="btn btn-soft block"
-            to={`/work/announcements/${a.id}`}
+            to={`/work/announcements/${a.id}${a.status === "pending" ? "" : "/edit"}`}
           >
             <Icon name="pencil" small />
             Керувати оголошенням

@@ -35,6 +35,9 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   if (!page) throw new Response("Такого оголошення немає.", { status: 404 });
   // Deciders manage any; the squad only its own.
   if (!page.canEdit) throw redirect(`/announcements/${id}`);
+  // Only a proposal needs a decision first; anything else is managed in its form.
+  if (page.a.status !== "pending")
+    throw redirect(`/work/announcements/${id}/edit`);
   return {
     ...page,
     back: page.canDecide
@@ -56,7 +59,12 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   }
   const result = await decideAnnouncement(env, ctx, me, id, form);
   if (!result.ok) return data({ error: result.error }, { status: 400 });
-  return { decided: result.status };
+  // Published: see it live. Turned down: on to the next proposal.
+  throw redirect(
+    result.status === "published"
+      ? `/announcements/${id}`
+      : "/work/announcements/review",
+  );
 }
 
 /** An announcement in the work pages: decide on a proposal, change it, remove it. */
@@ -70,13 +78,6 @@ export default function WorkAnnouncement({
     <>
       <TopBar back={back} title="Оголошення" />
 
-      {actionData && "decided" in actionData && (
-        <p className="ok-note" role="status">
-          {actionData.decided === "published"
-            ? "Опубліковано."
-            : "Відхилено, автор побачить пояснення."}
-        </p>
-      )}
       {actionData && "error" in actionData && (
         <p className="error-note" role="alert">
           {actionData.error}
