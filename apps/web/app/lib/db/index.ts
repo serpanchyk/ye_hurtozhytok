@@ -41,6 +41,7 @@ export type ActivityAction =
   | "task.taken"
   | "task.left"
   | "task.moved"
+  | "task.assigned"
   | "task.deleted"
   | "complaint.created"
   | "complaint.answered"

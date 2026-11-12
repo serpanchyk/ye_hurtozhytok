@@ -145,6 +145,12 @@ export function canManageBoard(actor: WithRoles, board: Board): boolean {
   return board === "council" ? isCouncil(actor) : isSquad(actor);
 }
 
+/** The roles that keep each board, to list who can work on its cards. */
+export const BOARD_KEEPERS: Record<Board, readonly Role[]> = {
+  council: ["council", "council_head", "site_manager"],
+  squad: ["squad", "squad_head", "site_manager"],
+};
+
 /** Public cards are for everyone; private ones only for those who keep the board. */
 export function canSeeTask(actor: Actor, task: TaskRef): boolean {
   if (task.deletedAt !== null) return false;
@@ -159,16 +165,23 @@ export function canDeleteComplaintCard(actor: WithRoles): boolean {
   return isSiteManager(actor);
 }
 
-/** The card's author, the board's head and the site manager remove cards. */
-export function canDeleteTask(actor: Actor, task: TaskRef): boolean {
-  if (task.deletedAt !== null || !canManageBoard(actor, task.board))
-    return false;
+/** The card's author, the board's head and the site manager say who works on a card. */
+export function canAssignTask(
+  actor: Actor,
+  task: { board: Board; createdBy: number },
+): boolean {
+  if (!canManageBoard(actor, task.board)) return false;
   const head = task.board === "council" ? "council_head" : "squad_head";
   return (
     task.createdBy === actor.id ||
     actor.roles.includes(head) ||
     isSiteManager(actor)
   );
+}
+
+/** The same people remove cards. */
+export function canDeleteTask(actor: Actor, task: TaskRef): boolean {
+  return task.deletedAt === null && canAssignTask(actor, task);
 }
 
 /** Any resident who is not blocked may write a complaint. */

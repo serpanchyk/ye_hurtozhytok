@@ -20,8 +20,8 @@ import {
   leadsSquad,
   type Actor,
 } from "./permissions";
+import { boardPeople } from "./assignees.server";
 import { byName } from "./names";
-import { idsWithRoles } from "./roles.server";
 import {
   NO_DUTY_MESSAGE,
   hasDuty,
@@ -32,19 +32,8 @@ import {
 import { addDays, kyivNow } from "./time";
 
 /** Everyone who may stand duty, by name: the squad, its head, the site manager. */
-export async function squadPeople(env: Env) {
-  const ids = await idsWithRoles(env, ["squad", "squad_head", "site_manager"]);
-  if (ids.length === 0) return [];
-  const people = await getDb(env)
-    .select({
-      id: residents.id,
-      name: residents.name,
-      telegram: residents.telegram,
-    })
-    .from(residents)
-    .where(and(inArray(residents.id, ids), eq(residents.blocked, false)))
-    .all();
-  return people.sort(byName);
+export function squadPeople(env: Env) {
+  return boardPeople(env, "squad");
 }
 
 /**

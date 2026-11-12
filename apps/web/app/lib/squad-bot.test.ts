@@ -81,6 +81,27 @@ describe("what the bot tells the squad's group", () => {
     ).toContain("Студрада передала картку");
   });
 
+  it("names who was given a card and who gave it", () => {
+    const text = newsFor(
+      entry("task.assigned", { board: "squad", added: [2], removed: [] }),
+      facts(card()),
+      URL,
+    );
+    expect(text).toContain("Призначено виконавців");
+    expect(text).toContain("Виконують: Ігор");
+    expect(text).toContain("Призначив(ла): Олег");
+  });
+
+  it("lists the people a new card was given to at once", () => {
+    const text = newsFor(
+      entry("task.created", { board: "squad", assignees: [2] }),
+      facts(card({ status: "in_progress" })),
+      URL,
+    );
+    expect(text).toContain("Виконують: Ігор");
+    expect(text).not.toContain("можна взяти собі");
+  });
+
   it("says nothing of a card deleted since", () => {
     expect(
       newsFor(

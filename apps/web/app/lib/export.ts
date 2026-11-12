@@ -22,6 +22,7 @@ export const ACTION_TEXT: Record<string, string> = {
   "task.status": "Змінено стан",
   "task.taken": "Взято в роботу",
   "task.left": "Вихід з виконавців",
+  "task.assigned": "Призначено виконавців",
   "task.moved": "Передано на іншу дошку",
   "task.deleted": "Видалено картку",
   "shift.created": "Додано вахту",
@@ -51,9 +52,13 @@ const KEY_TEXT: Record<string, string> = {
   to: "до",
   complaint: "зі звернення",
   patrol: "з обходу",
+  assignees: "виконавці",
+  added: "додано",
+  removed: "прибрано",
 };
 
 const BOARD_KEYS = new Set(["board", "from", "to"]);
+const PEOPLE_KEYS = new Set(["people", "assignees", "added", "removed"]);
 
 export function dateCell(dateKey: string | null): DateCell | null {
   return dateKey ? { date: dateKey } : null;
@@ -79,7 +84,7 @@ function valueText(key: string, value: unknown, ctx: Context): string {
     return key === "residentId" ? "вільна" : "—";
   if (key === "residentId" && typeof value === "number")
     return ctx.names.get(value) ?? `№${value}`;
-  if (key === "people" && Array.isArray(value))
+  if (PEOPLE_KEYS.has(key) && Array.isArray(value))
     return value.map((id) => ctx.names.get(Number(id)) ?? `№${id}`).join(", ");
   if (typeof value === "string") {
     if (key === "date") return dayText(value);

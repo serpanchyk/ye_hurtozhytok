@@ -1,6 +1,6 @@
 import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
 
-import { assigneesOf } from "./assignees.server";
+import { assigneesOf, boardPeople } from "./assignees.server";
 import { isComplaintCard } from "./complaints.server";
 import { activity, getDb, type Db } from "./db";
 import {
@@ -12,6 +12,7 @@ import {
   type Task,
 } from "./db/schema";
 import {
+  canAssignTask,
   canDeleteComplaintCard,
   canDeleteTask,
   canManageBoard,
@@ -144,9 +145,11 @@ export async function getTask(env: Env, actor: Actor, id: number) {
       doneAt: t.doneAt,
       author: author?.name ?? "",
       assignees: assignees.map((p) => p.name),
+      assigneeIds: assignees.map((p) => p.id),
       patrolId: t.patrolId,
     },
     mine: assignees.some((p) => p.id === actor.id),
+    canAssign: canAssignTask(actor, t),
     // A card from a complaint is turned down, never deleted.
     canDelete:
       canDeleteTask(actor, t) &&
@@ -163,6 +166,37 @@ export async function getTask(env: Env, actor: Actor, id: number) {
 export type SaveResult =
   { ok: true; id: number } | { ok: false; errors: TaskErrors };
 
+/**
+ * The people ticked in «Хто виконує»: those who keep the board, and those
+ * already on the card (`keep`) even if they have left it since.
+ */
+async function picked(
+  env: Env,
+  board: Board,
+  form: FormData,
+  keep: readonly number[] = [],
+) {
+  const allowed = new Set([
+    ...(await boardPeople(env, board)).map((p) => p.id),
+    ...keep,
+  ]);
+  return [...new Set(form.getAll("assignees").map(Number))].filter((id) =>
+    allowed.has(id),
+  );
+}
+
+/** Makes these people the card's whole team. */
+async function setAssignees(db: Db, taskId: number, ids: readonly number[]) {
+  const now = Date.now();
+  await db.delete(taskAssignees).where(eq(taskAssignees.taskId, taskId));
+  if (ids.length)
+    await db
+      .insert(taskAssignees)
+      .values(
+        ids.map((residentId) => ({ taskId, residentId, createdAt: now })),
+      );
+}
+
 export async function createTask(
   env: Env,
   actor: Actor,
@@ -172,6 +206,8 @@ export async function createTask(
   if (!canManageBoard(actor, board)) return null;
   const parsed = parseTaskForm(form);
   if (!parsed.ok) return parsed;
+  // Whoever makes a card may give it to people at once; then it is in work.
+  const assignees = await picked(env, board, form);
   const db = getDb(env);
   const now = Date.now();
   const t = await db
@@ -179,18 +215,20 @@ export async function createTask(
     .values({
       ...parsed.values,
       board,
+      status: assignees.length ? "in_progress" : "new",
       createdBy: actor.id,
       createdAt: now,
       updatedAt: now,
     })
     .returning()
     .get();
+  await setAssignees(db, t.id, assignees);
   await activity(db, {
     actorId: actor.id,
     action: "task.created",
     entity: "task",
     entityId: t.id,
-    details: { title: t.title, board, public: t.public },
+    details: { title: t.title, board, public: t.public, assignees },
   });
   return { ok: true, id: t.id };
 }
@@ -228,6 +266,19 @@ export async function updateTask(
     .update(tasks)
     .set({ ...parsed.values, updatedAt: Date.now() })
     .where(eq(tasks.id, id));
+  // «Хто виконує» is in the form only for those who may give the card out.
+  if (form.get("assigning") && canAssignTask(actor, t)) {
+    const before = ((await assigneesOf(db, [t.id])).get(t.id) ?? []).map(
+      (p) => p.id,
+    );
+    await reassign(
+      db,
+      actor,
+      t,
+      before,
+      await picked(env, t.board, form, before),
+    );
+  }
   await activity(db, {
     actorId: actor.id,
     action: "task.updated",
@@ -241,6 +292,38 @@ export async function updateTask(
     },
   });
   return { ok: true, id };
+}
+
+/**
+ * New people on a card: a new one with people goes to «В роботі», one left
+ * with nobody back to «Нові», as when people take it or step away.
+ */
+async function reassign(
+  db: Db,
+  actor: Actor,
+  t: Task,
+  before: readonly number[],
+  ids: number[],
+) {
+  const added = ids.filter((id) => !before.includes(id));
+  const removed = before.filter((id) => !ids.includes(id));
+  if (added.length === 0 && removed.length === 0) return;
+  await setAssignees(db, t.id, ids);
+  const status =
+    t.status === "new" && ids.length
+      ? "in_progress"
+      : t.status === "in_progress" && ids.length === 0
+        ? "new"
+        : t.status;
+  if (status !== t.status)
+    await db.update(tasks).set({ status }).where(eq(tasks.id, t.id));
+  await activity(db, {
+    actorId: actor.id,
+    action: "task.assigned",
+    entity: "task",
+    entityId: t.id,
+    details: { board: t.board, added, removed },
+  });
 }
 
 export async function setTaskStatus(

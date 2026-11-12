@@ -28,6 +28,7 @@ import {
 import { shiftStats } from "./shifts.server";
 import { getSetting, setSetting } from "./settings.server";
 import {
+  cardAssignedMessage,
   cardStatusMessage,
   cardTakenMessage,
   cardToCouncilMessage,
@@ -142,6 +143,10 @@ async function postNews(env: Env, chat: TelegramChat) {
   if (last > at) await claim(env, SETTING_CURSOR, at, last);
 }
 
+/** Names (with Telegram) of the ids in a logged list. */
+const namesOf = (list: unknown, f: Facts): string[] =>
+  Array.isArray(list) ? list.map((id) => f.name(num(id)) ?? "Хтось") : [];
+
 const detailsOf = (e: Entry): Details =>
   e.details ? (JSON.parse(e.details) as Details) : {};
 const num = (v: unknown) => (typeof v === "number" ? v : null);
@@ -166,8 +171,9 @@ async function gather(env: Env, entries: Entry[]) {
     const after = (d.after ?? {}) as Details;
     for (const v of [d.residentId, before.residentId, after.residentId])
       if (typeof v === "number") people.add(v);
-    if (Array.isArray(d.people))
-      for (const v of d.people) if (typeof v === "number") people.add(v);
+    for (const list of [d.people, d.assignees, d.added, d.removed])
+      if (Array.isArray(list))
+        for (const v of list) if (typeof v === "number") people.add(v);
   }
 
   const [names, cardRows, helpers, shiftRows, patrolRows] = await Promise.all([
@@ -243,9 +249,16 @@ export function newsFor(e: Entry, f: Facts, url: string): string | null {
             : "board";
         return newCardMessage(url, {
           ...t,
+          assignees: namesOf(d.assignees, f),
           authorName: origin === "complaint" ? null : actor,
           origin,
         });
+      }
+      case "task.assigned": {
+        const added = namesOf(d.added, f);
+        const removed = namesOf(d.removed, f);
+        if (!added.length && !removed.length) return null;
+        return cardAssignedMessage(url, { ...t, added, removed, by: actor });
       }
       case "task.taken":
         return cardTakenMessage(url, {

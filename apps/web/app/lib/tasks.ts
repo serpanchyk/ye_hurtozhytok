@@ -154,6 +154,8 @@ export function historyLabel(action: string, details: string | null): string {
       return "береться виконувати";
     case "task.left":
       return "більше не виконує";
+    case "task.assigned":
+      return "призначає виконавців";
     case "task.moved":
       return isBoard(d.from) && isBoard(d.to)
         ? `передає з дошки «${BOARD_LABELS[d.from]}» ${BOARD_DATIVE[d.to]}`

@@ -1,8 +1,26 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
-import { inSlices, type Db } from "./db";
-import { residents, taskAssignees } from "./db/schema";
+import { getDb, inSlices, type Db } from "./db";
+import { residents, taskAssignees, type Board } from "./db/schema";
 import { byName } from "./names";
+import { BOARD_KEEPERS } from "./permissions";
+import { idsWithRoles } from "./roles.server";
+
+/** Everyone who keeps a board, by name: those a card on it can be given to. */
+export async function boardPeople(env: Env, board: Board) {
+  const ids = await idsWithRoles(env, BOARD_KEEPERS[board]);
+  if (ids.length === 0) return [];
+  const people = await getDb(env)
+    .select({
+      id: residents.id,
+      name: residents.name,
+      telegram: residents.telegram,
+    })
+    .from(residents)
+    .where(and(inArray(residents.id, ids), eq(residents.blocked, false)))
+    .all();
+  return people.sort(byName);
+}
 
 type Person = { id: number; name: string };
 

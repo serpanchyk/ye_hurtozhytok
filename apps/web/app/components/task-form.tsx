@@ -1,6 +1,6 @@
 import { Form, useNavigation } from "react-router";
 
-import { Check, FormField } from "~/components/controls";
+import { Check, ChoiceChips, FormField } from "~/components/controls";
 import {
   DETAILS_MAX,
   PLACE_MAX,
@@ -26,10 +26,16 @@ export function TaskForm({
   errors,
   submitLabel,
   complaint = false,
+  people,
+  assignees = [],
 }: {
   initial: Initial;
   errors?: TaskErrors;
   submitLabel: string;
+  /** Who the card can be given to; only for those who may give it out. */
+  people?: readonly { id: number; name: string }[];
+  /** Who works on it now. */
+  assignees?: readonly number[];
   /** A complaint's card is always public, so it has no switch. */
   complaint?: boolean;
 }) {
@@ -80,6 +86,25 @@ export function TaskForm({
           aria-describedby={described("details", errors?.details, true)}
         />
       </FormField>
+      {people && people.length > 0 && (
+        <>
+          <input type="hidden" name="assigning" value="1" />
+          <ChoiceChips
+            name="assignees"
+            legend="Хто виконує"
+            multiple
+            columns={2}
+            defaultValues={assignees.map(String)}
+            options={people.map((p) => ({
+              value: String(p.id),
+              label: p.name,
+            }))}
+          />
+          <small className="choice-hint">
+            Можна кількох або нікого: тоді хтось візьме картку сам.
+          </small>
+        </>
+      )}
       {!complaint && (
         <Check
           name="public"

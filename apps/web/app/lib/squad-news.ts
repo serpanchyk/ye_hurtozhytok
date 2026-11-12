@@ -59,6 +59,8 @@ export function newCardMessage(
     place: string | null;
     details: string | null;
     status: TaskStatus;
+    /** Given to people right away (names with Telegram). */
+    assignees?: readonly string[];
     /** Null for a resident's complaint: their name stays in the app. */
     authorName: string | null;
     origin: "board" | "complaint" | "patrol" | "council";
@@ -75,9 +77,11 @@ export function newCardMessage(
     lines.push(escapeHtml(clip(card.details)));
   if (card.place) lines.push(`Де: ${escapeHtml(card.place)}`);
   lines.push(
-    card.status === "new"
-      ? "Виконавця ще немає — можна взяти собі."
-      : `Стан: ${STATUS_WORDS[card.status]}`,
+    card.assignees?.length
+      ? `Виконують: ${escapeHtml(card.assignees.join(", "))}`
+      : card.status === "new"
+        ? "Виконавця ще немає — можна взяти собі."
+        : `Стан: ${STATUS_WORDS[card.status]}`,
   );
   if (card.authorName)
     lines.push(
@@ -97,6 +101,27 @@ export function cardTakenMessage(
     `${card.others ? "Долучився(лася)" : "Виконує"}: ${escapeHtml(card.takenBy)}`,
     cardLink(appUrl, card.id),
   ].join("\n");
+}
+
+/** Someone gave the card to people, or took people off it. */
+export function cardAssignedMessage(
+  appUrl: string,
+  card: {
+    id: number;
+    title: string;
+    added: readonly string[];
+    removed: readonly string[];
+    by: string;
+  },
+): string {
+  const lines = ["<b>Призначено виконавців</b>", escapeHtml(card.title)];
+  if (card.added.length)
+    lines.push(`Виконують: ${escapeHtml(card.added.join(", "))}`);
+  if (card.removed.length)
+    lines.push(`Більше не виконують: ${escapeHtml(card.removed.join(", "))}`);
+  lines.push(`Призначив(ла): ${escapeHtml(card.by)}`);
+  lines.push(cardLink(appUrl, card.id));
+  return lines.join("\n");
 }
 
 export function cardStatusMessage(

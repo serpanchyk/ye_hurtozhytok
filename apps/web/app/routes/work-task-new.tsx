@@ -2,6 +2,7 @@ import { data, redirect } from "react-router";
 
 import { TaskForm } from "~/components/task-form";
 import { Credit, TopBar } from "~/components/ui";
+import { boardPeople } from "~/lib/assignees.server";
 import { requireProfile } from "~/lib/auth.server";
 import { canManageBoard } from "~/lib/permissions";
 import { BOARD_LABELS, defaultPublic, isBoard, type Board } from "~/lib/tasks";
@@ -25,7 +26,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     throw new Response("Картки додають ті, хто веде цю дошку.", {
       status: 403,
     });
-  return { board };
+  // The card is theirs: they may give it to anyone who keeps the board.
+  return { board, people: await boardPeople(context.cloudflare.env, board) };
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -49,7 +51,7 @@ export default function NewTask({
   loaderData,
   actionData,
 }: Route.ComponentProps) {
-  const { board } = loaderData;
+  const { board, people } = loaderData;
   return (
     <>
       <TopBar back={`/work/board?b=${board}`} title="Нова картка" />
@@ -65,6 +67,7 @@ export default function NewTask({
         }}
         errors={actionData?.errors}
         submitLabel="Додати"
+        people={people}
       />
       <Credit />
     </>
